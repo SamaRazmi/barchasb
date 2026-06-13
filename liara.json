@@ -1,0 +1,6 @@
+{
+  "platform": "next",
+  "node": {
+    "mirror": false
+  }
+}
