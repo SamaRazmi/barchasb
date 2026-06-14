@@ -42,33 +42,25 @@ const DualFloatingSelect: React.FC<Props> = ({
 
   const handleUnitChange = (e: any) => {
     const value = e.target.value as TimeUnit;
-
     setUnit(value);
     onChange?.(value, amount);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.replace(/\D/g, "");
-
-    // جلوگیری از 0 و اعدادی که با 0 شروع می‌شوند
     if (value === "0") return;
-
     if (value.length > 1 && value.startsWith("0")) {
       value = value.replace(/^0+/, "");
     }
-
     setAmount(value);
     onChange?.(unit, value);
   };
 
   const getLabelFontSize = () => {
     if (typeof window === "undefined") return "2vh";
-
     const vw = window.innerWidth;
-
     if (vw < 600) return isActive ? "2vh" : "1.6vh";
     if (vw < 960) return isActive ? "2.2vh" : "2vh";
-
     return "2.4vh";
   };
 
@@ -83,15 +75,45 @@ const DualFloatingSelect: React.FC<Props> = ({
         borderRadius: "10px",
         backgroundColor: "#FFFFFF",
         overflow: "visible",
+        marginBottom: "1vh",
       }}
     >
-      {/* UNIT */}
+      {/* بخش مقدار (چپ) */}
+      <div style={{ width: "60%" }}>
+        <TextField
+          fullWidth
+          disabled={disabled}
+          value={amount}
+          placeholder="مقدار"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onChange={handleAmountChange}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              height,
+              borderRadius: 0,
+              fontWeight: 600,
+            },
+            "& fieldset": { border: "none" },
+            "& input[type=number]": { MozAppearance: "textfield" },
+            "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+              { WebkitAppearance: "none", margin: 0 },
+          }}
+          inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
+        />
+      </div>
+
+      {/* جداکننده عمودی */}
       <div
         style={{
-          width: "40%",
-          position: "relative",
+          width: "1px",
+          backgroundColor: "#D1D5DB",
+          margin: "8px 0",
         }}
-      >
+      />
+
+      {/* بخش انتخاب واحد (راست) */}
+      <div style={{ width: "40%", position: "relative" }}>
         <TextField
           select
           fullWidth
@@ -119,7 +141,6 @@ const DualFloatingSelect: React.FC<Props> = ({
                   </span>
                 );
               }
-
               return unitOptions.find((o) => o.value === selected)?.label ?? "";
             },
           }}
@@ -129,9 +150,7 @@ const DualFloatingSelect: React.FC<Props> = ({
               borderRadius: 0,
               fontWeight: 600,
             },
-            "& fieldset": {
-              border: "none",
-            },
+            "& fieldset": { border: "none" },
           }}
         >
           {unitOptions.map((item) => (
@@ -169,61 +188,7 @@ const DualFloatingSelect: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Divider */}
-      <div
-        style={{
-          width: "1px",
-          backgroundColor: "#D1D5DB",
-          margin: "8px 0",
-        }}
-      />
-
-      {/* Amount */}
-      <div
-        style={{
-          width: "60%",
-        }}
-      >
-        <TextField
-          fullWidth
-          disabled={disabled}
-          value={amount}
-          placeholder="مقدار"
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          onChange={handleAmountChange}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              height,
-              borderRadius: 0,
-              fontWeight: 600,
-            },
-            "& fieldset": {
-              border: "none",
-            },
-
-            "& input[type=number]": {
-              MozAppearance: "textfield",
-            },
-
-            "& input::-webkit-outer-spin-button": {
-              WebkitAppearance: "none",
-              margin: 0,
-            },
-
-            "& input::-webkit-inner-spin-button": {
-              WebkitAppearance: "none",
-              margin: 0,
-            },
-          }}
-          inputProps={{
-            inputMode: "numeric",
-            pattern: "[0-9]*",
-          }}
-        />
-      </div>
-
-      {/* Floating Label */}
+      {/* Floating Label - فقط در حالت فعال دیده می‌شود */}
       <label
         style={{
           position: "absolute",
@@ -240,6 +205,7 @@ const DualFloatingSelect: React.FC<Props> = ({
           pointerEvents: "none",
           zIndex: 100,
           fontSize: getLabelFontSize(),
+          opacity: isActive ? 1 : 0, // ← فقط در حالت فعال قابل مشاهده است
         }}
       >
         بازه زمانی

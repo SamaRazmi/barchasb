@@ -37,7 +37,7 @@ export default function MainPanel() {
         {/* دکمه آگهی کارفرمایان */}
         <div
           onClick={handleEmployersAds}
-          className="flex items-center gap-2 pl-8 pr-6 h-[7vh] bg-[#143A62] rounded-[16px] cursor-pointer shadow-md"
+          className="flex items-center gap-2 pl-[4vh] pr-[2vh] h-[7vh] bg-[#143A62] rounded-xl cursor-pointer shadow-md"
         >
           <Image
             src="/images/employers.svg"
@@ -53,7 +53,7 @@ export default function MainPanel() {
         {/* دکمه آگهی کارجویان */}
         <div
           onClick={handleJobSeekersAds}
-          className="flex items-center gap-2 h-[7vh] bg-[#143A62] rounded-[16px] pl-10 pr-6 cursor-pointer shadow-md mx-6"
+          className="flex items-center gap-2 h-[7vh] bg-[#143A62] rounded-xl pl-[4vh] pr-[2vh] cursor-pointer shadow-md mr-[0.8vh] ml-[0.2vh]"
         >
           <Image src="/images/employers.svg" alt="Ads" width={20} height={20} />
           <span className="text-white sm:text-[2vh] lg:text-[2.5vh] font-normal whitespace-nowrap text-ellipsis">
@@ -63,7 +63,7 @@ export default function MainPanel() {
 
         {/* CircleProgress درست تراز */}
         <div className="mr-auto flex flex-col justify-start h-[5vh]">
-          <div className="my-[0.3vh] mr-auto">
+          <div className="mt-[1vh] mr-auto">
             <CircleProgress dayPercent={30} notificationPercent={90} />
           </div>
         </div>

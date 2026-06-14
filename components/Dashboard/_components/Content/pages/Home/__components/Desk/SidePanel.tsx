@@ -173,7 +173,7 @@ function SidePanelContent() {
         {sortedAds.length > 1 && (
           <div
             onClick={handlePrevClick}
-            className="absolute top-6 left-1/2 -translate-x-1/2 cursor-pointer z-50 select-none"
+            className="absolute top-8 left-1/2 -translate-x-1/2 cursor-pointer z-50 select-none"
           >
             <Image
               src="/images/arrow-slider-top-dashboard.svg"
@@ -220,7 +220,7 @@ function SidePanelContent() {
         {sortedAds.length > 1 && (
           <div
             onClick={handleNextClick}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 cursor-pointer z-10 select-none"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer z-10 select-none"
           >
             <Image
               src="/images/arrow-slider-bottom-dashboard.svg"

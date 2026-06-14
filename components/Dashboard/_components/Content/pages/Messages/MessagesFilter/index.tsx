@@ -72,16 +72,18 @@ export default function MessagesFilter() {
   }, []);
 
   // ======================= NEW: تابع دریافت مجموع (اعلان‌ها + دستگاه‌ها) برای برچسب =======================
+
   const refreshTotalBarchasbCount = useCallback(async () => {
     if (!user?._id) return;
     try {
       const [notifications, devicesRes] = await Promise.all([
         fetchInAppNotifications(),
-        getDevices().catch(() => ({ sessions: [] })),
+        getDevices().catch(() => ({ unreadCount: 0, sessions: [] })), // مقدار پیش‌فرض
       ]);
       const unreadNotifs = notifications.filter((n) => !n.isRead).length;
-      const deviceCount = devicesRes?.sessions?.length || 0;
-      const total = unreadNotifs + deviceCount;
+      // ✅ تغییر: به جای sessions.length از unreadCount استفاده می‌کنیم
+      const unreadDevices = devicesRes?.unreadCount ?? 0;
+      const total = unreadNotifs + unreadDevices;
       setUnreadCounts((prev) => ({ ...prev, barchasb: total }));
     } catch (err) {
       console.error("Error fetching total barchasb count:", err);
@@ -268,11 +270,16 @@ export default function MessagesFilter() {
       ? conversations.filter((c) => c.adType === typeMap[activeTab])
       : [];
 
-  // رویدادهای اسکرول با صفحه‌کلید (برای دسکتاپ)
+  // رویدادهای اسکرول با صفحه‌کلید (برای دسکتاپ و موبایل)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const container = desktopContainerRef.current;
+      // تشخیص viewport: اگر عرض صفحه کمتر از 640px است (breakpoint sm در Tailwind)
+      const isMobile = window.innerWidth < 640;
+      const container = isMobile
+        ? mobileContainerRef.current
+        : desktopContainerRef.current;
       if (!container) return;
+
       const scrollAmount = 100;
       const pageScrollAmount = container.clientHeight;
       switch (e.key) {
@@ -291,6 +298,8 @@ export default function MessagesFilter() {
         case "PageUp":
           container.scrollTop -= pageScrollAmount;
           e.preventDefault();
+          break;
+        default:
           break;
       }
     };
@@ -333,11 +342,24 @@ export default function MessagesFilter() {
     setDragOffset(e.touches[0].clientY);
   };
 
+  // ------------------------------------------------------------------
+  // کامپوننت نشانگر تب‌ها با منطق جدید:
+  // - اگر count > 0 : پس‌زمینه قرمز (bg-red-600) + نمایش عدد
+  // - اگر count == 0 : پس‌زمینه #FF555580 + بدون متن (فقط دایره خالی)
+  // ------------------------------------------------------------------
   const UnreadBadge = ({ count }: { count: number }) => {
+    const isZero = count === 0;
+    const backgroundClass = !isZero ? "bg-red-600" : "";
+    const backgroundStyle = isZero ? { background: "#FF555580" } : {};
+    const displayText = !isZero ? (count > 99 ? "99+" : count) : "";
+
     return (
       <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none">
-        <span className="flex items-center justify-center min-w-[20px] h-5 bg-red-600 text-white text-[11px] font-bold rounded-full px-1 shadow-md">
-          {count > 99 ? "99+" : count}
+        <span
+          className={`flex items-center justify-center min-w-[20px] h-5 text-white text-[11px] font-bold rounded-full px-1 shadow-md ${backgroundClass}`}
+          style={backgroundStyle}
+        >
+          {displayText}
         </span>
       </div>
     );
@@ -347,8 +369,8 @@ export default function MessagesFilter() {
     <div className="h-[50vh] md:h-screen overflow-hidden">
       {/* حالت دسکتاپ */}
       <div className="hidden sm:block w-full h-full">
-        <div className="w-full flex flex-col items-center h-full">
-          <div className="w-[80%] pr-1 py-1 rounded-t-[10px] mt-[4vh] flex-shrink-0">
+        <div className="w-full flex flex-col items-right lg:items-center h-full">
+          <div className="w-full lg:w-[80%] pr-1 py-1 rounded-t-[10px] mt-[4vh] flex-shrink-0">
             <div className="w-fit-content bg-white shadow-[0px_0px_4px_0px_#0000001A] rounded-[10px] flex items-center relative">
               {options.map((opt) => {
                 const isSelected = opt.key === activeTab;
@@ -386,9 +408,9 @@ export default function MessagesFilter() {
                         }}
                       />
                     )}
-                    <div className="relative flex items-center justify-center z-10 py-2 px-5">
+                    <div className="relative flex items-center justify-center z-10 py-2 px-2 lg:px-5">
                       <span
-                        className={`text-[2.2vh] ${isSelected ? "text-white" : "text-[#143A62]"}`}
+                        className={`text-[1.2vh] lg:text-[2.2vh] ${isSelected ? "text-white" : "text-[#143A62]"}`}
                       >
                         {opt.label}
                       </span>
@@ -581,7 +603,7 @@ export default function MessagesFilter() {
                               className="w-5 h-5 object-contain"
                             />
                           ) : (
-                            <span className="inline-flex items-center justify-center min-w-[20px] h-5 bg-red-600 text-white text-[10px] font-bold rounded-full px-1 shadow-md">
+                            <span className="inline-flex items-center justify-center min-w-[20px] h-4 bg-red-600 text-white text-[2.5vh] font-bold rounded-full px-1 shadow-md">
                               {unreadCount > 99 ? "99+" : unreadCount}
                             </span>
                           )}

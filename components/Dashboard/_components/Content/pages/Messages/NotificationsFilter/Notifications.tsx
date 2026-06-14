@@ -48,7 +48,7 @@ const users = [
 
 const Notifications: React.FC = () => {
   return (
-    <div className="w-full p-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div className="w-full p-2 grid grid-cols-1 lg:grid-cols-2 gap-4">
       {users.map((user, idx) => (
         <div key={idx} className="relative h-[22vh]">
           {/* div اصلی کارت */}

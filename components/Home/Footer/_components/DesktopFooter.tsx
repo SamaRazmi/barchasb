@@ -16,8 +16,8 @@ export default function Footer() {
           <FooterColumn
             title="کاربران"
             links={[
-              { href: "/employer/faq", label: "سوالات متداول " },
-              { href: "/employer/rules", label: "قوانین و مقررات " },
+              { href: "/faq", label: "سوالات متداول " },
+              { href: "/rules", label: "قوانین و مقررات " },
             ]}
           />
 

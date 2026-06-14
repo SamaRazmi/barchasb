@@ -20,7 +20,9 @@ const MessagesContent: React.FC = () => {
       <div className="flex-1 w-full flex flex-col items-center">
         {/* عنوان پیام‌ها (وسط افقی) */}
         <div className="w-full flex justify-center mt-[1vh] px-4">
-          <div className="text-[#143A62] font-bold text-[5vh]">پیام‌ها</div>
+          <div className="text-[#143A62] font-bold text-[2.5vh] lg:text-[5vh]">
+            پیام‌ها
+          </div>
         </div>
 
         {/* فیلتر (وسط افقی زیر عنوان) */}
@@ -36,7 +38,7 @@ const MessagesContent: React.FC = () => {
       <div className="flex-1 w-full flex flex-col items-center">
         {/* عنوان اعلان‌ها (وسط افقی) */}
         <div className="w-full flex justify-center mt-[1vh] px-4">
-          <div className="text-[#143A62] font-bold text-[5vh]">
+          <div className="text-[#143A62] font-bold text-[2.5vh] lg:text-[5vh]">
             پیشنهادات هوشمند
           </div>
         </div>

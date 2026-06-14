@@ -299,7 +299,6 @@ const SupportQuestions: React.FC = () => {
     <div className="flex flex-col h-[88vh] overflow-y-hidden">
       {/* Desktop */}
       <div className="hidden md:flex md:flex-col md:h-full sm:p-[1vh]">
-        {/* ✅ فقط تغییر اینجا */}
         {isFaqPage ? <HeaderIndex /> : <TopBar />}
 
         <div className="relative flex justify-center items-start h-full mt-[1vh]">
@@ -378,37 +377,22 @@ const SupportQuestions: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile */}
-      <div className="flex flex-col sm:hidden h-full p-[1vh] relative">
+      {/* Mobile - اصلاح شده برای وسط‌چین افقی */}
+      <div className="flex flex-col md:hidden h-full p-[1vh] relative items-center justify-center mr-[5%]">
         <img
           src="/images/bg_support_ticket.svg"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover rounded-[2vh]"
+          className="absolute inset-0 w-full h-full object-cover object-center rounded-[2vh]"
           loading="lazy"
         />
-
-        <button
-          onClick={() => router.back()}
-          className="absolute top-[1vh] left-[1vh] z-50"
-        >
-          <div className="w-[5vh] h-[5vh] rounded-full flex items-center justify-center bg-[#FFFFFF80]">
-            <Image
-              src="/images/back_arrow.svg"
-              alt="Back"
-              width={3}
-              height={3}
-              className="w-[3vh] h-[3vh]"
-            />
-          </div>
-        </button>
-
         <div className="flex justify-center mb-[1vh] mt-[2vh] relative z-10">
           <h2 className="text-[4vh] font-bold text-center text-[#143A62] [text-shadow:0.7vh_0.7vh_0.4vh_rgba(0,0,0,0.15)]">
             سوالات متداول
           </h2>
         </div>
 
-        <div className="flex flex-col gap-[1.5vh] flex-1 min-h-0 relative z-10">
+        <div className="flex flex-col gap-[1.5vh] flex-1 min-h-0 relative z-10 w-[95%]">
+          {/* جعبه پاسخ */}
           <div
             className="w-full rounded-xl p-[2vh] shadow-[0.1vh_0.1vh_1vh_0px_#00000026] overflow-y-auto max-h-[35vh]"
             style={{ backdropFilter: "blur(15px)", background: "#143A620D" }}
@@ -416,6 +400,7 @@ const SupportQuestions: React.FC = () => {
             <FaqAnswer faq={selectedFaq} />
           </div>
 
+          {/* جعبه لیست دسته‌بندی‌ها */}
           <div
             className="w-full rounded-xl flex-1 min-h-0 flex flex-col"
             style={{ backdropFilter: "blur(15px)", background: "#143A620D" }}

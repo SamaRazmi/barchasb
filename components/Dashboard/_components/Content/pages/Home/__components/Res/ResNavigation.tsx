@@ -9,7 +9,7 @@ const ResNavigation: React.FC = () => {
   const navItems = [
     { label: "میزکار", href: "/dashboard" },
     { label: "آگهی ها", href: "/dashboard/ads" },
-    { label: "دیجیتال آگهی", href: "/dashboard/projects" },
+    { label: "آگهی دیجیتال", href: "/dashboard/projects" },
     { label: "آگهی های من", href: "/dashboard/myads" },
     { label: "اشتراک و مالی", href: "/dashboard/billing" },
     { label: "افزونه ها", href: "/dashboard/plugins" },

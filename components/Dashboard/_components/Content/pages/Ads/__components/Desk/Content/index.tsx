@@ -358,7 +358,7 @@ const Content: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-[4.8vh]">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-[1vh] md:gap-[4.8vh]">
             {currentCards.map((card) =>
               activeTab === "agahi" ? (
                 <KioskContent

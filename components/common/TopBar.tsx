@@ -4,13 +4,13 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { fetchInAppNotifications } from "@/api/apiNotifications";
 import { useUser } from "@/context/UserContext";
-import { getDevices } from "@/api/apiDevices"; // اضافه شده
+import { getDevices } from "@/api/apiDevices";
 
 export default function TopBar() {
   const [isActive, setIsActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [deviceCount, setDeviceCount] = useState<number>(0); // جدید
+  const [deviceCount, setDeviceCount] = useState<number>(0); // اینجا تعداد دستگاه‌های نخوانده ذخیره می‌شود
   const router = useRouter();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { user } = useUser();
@@ -66,18 +66,19 @@ export default function TopBar() {
     }
   }, [user]);
 
-  // دریافت تعداد دستگاه‌های فعال (جدید)
+  // دریافت تعداد دستگاه‌های نخوانده (اصلاح شده)
   const loadDevices = useCallback(async () => {
     if (!user) {
       setDeviceCount(0);
       return;
     }
-    console.log("🔄 در حال دریافت تعداد دستگاه‌های فعال...");
+    console.log("🔄 در حال دریافت تعداد دستگاه‌های نخوانده...");
     try {
       const res = await getDevices();
-      const sessions = res?.sessions || [];
-      setDeviceCount(sessions.length);
-      console.log(`📱 تعداد دستگاه‌های فعال: ${sessions.length}`);
+      // ✅ استفاده از unreadCount برگشتی از API به جای sessions.length
+      const unreadDevices = res?.unreadCount ?? 0;
+      setDeviceCount(unreadDevices);
+      console.log(`📱 تعداد دستگاه‌های نخوانده: ${unreadDevices}`);
     } catch (error) {
       console.error("❌ خطا در دریافت دستگاه‌ها:", error);
       setDeviceCount(0);
@@ -89,13 +90,13 @@ export default function TopBar() {
 
   useEffect(() => {
     loadUnreadCount();
-    loadDevices(); // اضافه شده
+    loadDevices();
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         console.log("👁️ تب مرورگر فعال شد - بروزرسانی");
         loadUnreadCount();
-        loadDevices(); // به‌روزرسانی دستگاه‌ها هنگام فعال شدن تب
+        loadDevices();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -103,7 +104,7 @@ export default function TopBar() {
     const handlePopState = () => {
       console.log("🔙 کاربر با دکمه Back برگشت - بروزرسانی");
       loadUnreadCount();
-      loadDevices(); // به‌روزرسانی دستگاه‌ها هنگام بازگشت
+      loadDevices();
     };
     window.addEventListener("popstate", handlePopState);
 
@@ -118,7 +119,7 @@ export default function TopBar() {
       window.removeEventListener("popstate", handlePopState);
       window.removeEventListener("notificationRead", handleNotificationRead);
     };
-  }, [loadUnreadCount, loadDevices]); // وابستگی‌ها به‌روز شد
+  }, [loadUnreadCount, loadDevices]);
 
   const handleNotificationClick = () => {
     router.push("/dashboard/messages?tab=barchasb");
@@ -248,7 +249,7 @@ export default function TopBar() {
           ثبت آگهی
         </button>
 
-        {/* دکمه اعلان‌ها با نشانگر مجموع (اعلان‌های نخوانده + دستگاه‌های فعال) */}
+        {/* دکمه اعلان‌ها با نشانگر مجموع (اعلان‌های نخوانده + دستگاه‌های نخوانده) */}
         <div
           onClick={handleNotificationClick}
           className="relative w-[7vh] h-[7vh] rounded-[10px] flex items-center justify-center bg-[#F5F5F5] group cursor-pointer"

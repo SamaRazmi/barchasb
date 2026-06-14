@@ -84,6 +84,16 @@ const EditFormJobSeeker: React.FC<EditFormJobSeekerProps> = ({
     otherFeatures: "",
   });
 
+  // تابع برای استخراج نام فایل از آدرس کامل
+  const getDisplayFileName = (filePath: string) => {
+    if (!filePath) return "";
+    // اگر آدرس کامل (مسیر یا URL) باشد، فقط قسمت آخر (نام فایل) را برمی‌گردانیم
+    if (filePath.includes("/") || filePath.includes("\\")) {
+      return filePath.split(/[\/\\]/).pop() || filePath;
+    }
+    return filePath;
+  };
+
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [imageModalOpen, setImageModalOpen] = useState(false);
@@ -375,13 +385,29 @@ const EditFormJobSeeker: React.FC<EditFormJobSeekerProps> = ({
           multiSelect
         />
 
-        {/* Resume */}
-        <ModalTriggerInput
-          placeholder="بارگذاری فایل رزومه (PDF)"
-          value={form.resumeFile}
-          type="file"
-          onClick={() => resumeInputRef.current?.click()}
-        />
+        {/* Resume - فقط نام فایل نمایش داده می‌شود و لینک دانلود با آدرس کامل */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <ModalTriggerInput
+              placeholder="بارگذاری فایل رزومه (PDF)"
+              value={getDisplayFileName(form.resumeFile)}
+              type="file"
+              onClick={() => resumeInputRef.current?.click()}
+            />
+          </div>
+          {form.resumeFile &&
+            (form.resumeFile.startsWith("http") ||
+              form.resumeFile.startsWith("/")) && (
+              <a
+                href={form.resumeFile}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 text-sm whitespace-nowrap"
+              >
+                مشاهده فایل
+              </a>
+            )}
+        </div>
         <input
           ref={resumeInputRef}
           type="file"
@@ -402,13 +428,29 @@ const EditFormJobSeeker: React.FC<EditFormJobSeekerProps> = ({
           }}
         />
 
-        {/* Portfolio */}
-        <ModalTriggerInput
-          placeholder="بارگذاری نمونه کارها (PDF)"
-          value={form.portfolioFile}
-          type="file"
-          onClick={() => portfolioInputRef.current?.click()}
-        />
+        {/* Portfolio - فقط نام فایل نمایش داده می‌شود و لینک دانلود با آدرس کامل */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1">
+            <ModalTriggerInput
+              placeholder="بارگذاری نمونه کارها (PDF)"
+              value={getDisplayFileName(form.portfolioFile)}
+              type="file"
+              onClick={() => portfolioInputRef.current?.click()}
+            />
+          </div>
+          {form.portfolioFile &&
+            (form.portfolioFile.startsWith("http") ||
+              form.portfolioFile.startsWith("/")) && (
+              <a
+                href={form.portfolioFile}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 text-sm whitespace-nowrap"
+              >
+                مشاهده فایل
+              </a>
+            )}
+        </div>
         <input
           ref={portfolioInputRef}
           type="file"

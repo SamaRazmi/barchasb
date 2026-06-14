@@ -1,6 +1,6 @@
 "use client";
 
-import { Formik, Form, FormikHelpers } from "formik";
+import { Formik, Form, FormikHelpers, useFormikContext } from "formik";
 import initialValues from "@/utils/resumeInitialValues";
 import validationSchema from "@/utils/validationSchema";
 import DynamicTable from "@/components/table/dynamicTable";
@@ -16,7 +16,7 @@ import BackButton from "../tests/backButton";
 import SubmitButton from "../button/submitButton";
 
 // --- Types ---
-type FormValues = any; // می‌توانید در آینده این را دقیق‌تر تعریف کنید
+type FormValues = any;
 
 // --- Helper Functions ---
 function cleanArray(arr: any[], keys: string[]) {
@@ -104,6 +104,20 @@ function mapFormValuesToPayload(values: FormValues) {
   };
 
   return removeEmptyFields(payload);
+}
+
+// کامپوننت داخلی برای دسترسی به context Formik و ارسال props صحیح به SubmitButton
+function SubmitButtonWrapper() {
+  const { isSubmitting, submitForm } = useFormikContext();
+
+  return (
+    <SubmitButton
+      classStyle=""
+      disabled={isSubmitting}
+      onChange={() => {}}
+      onClick={() => submitForm()}
+    />
+  );
 }
 
 export default function ResumeForm() {
@@ -298,7 +312,7 @@ export default function ResumeForm() {
             />
 
             <div className="flex justify-center pt-6">
-              <SubmitButton />{" "}
+              <SubmitButtonWrapper />
             </div>
           </div>
         </div>

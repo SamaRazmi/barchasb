@@ -75,7 +75,7 @@ const Support: React.FC = () => {
       </div>
 
       {/* Mobile */}
-      <div className="flex flex-col md:hidden flex-1 h-[95vh]">
+      <div className="flex flex-col md:hidden flex-1 h-[95vh] ">
         {view === "menu" && <SupportContent setView={goTo} />}
         {view === "questions" && <SupportQuestions />}
         {view === "ticket" && <SupportTicket />}

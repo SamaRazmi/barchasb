@@ -6,7 +6,7 @@ import ToastPortal from "@/components/common/ToastPortal";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-
+import ReportDropdown from "@/components/common/ReportDropdown";
 interface Props {
   id: string;
 }
@@ -379,12 +379,19 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
         )}
       </div>
 
-      {/* ردیف عنوان + آیکون‌های کپی/اشتراک */}
+      {/* ردیف عنوان + آیکون‌ها (ترتیب: گزارش اول) */}
       <div className="flex justify-between items-center">
         <h2 className="text-[3vh] font-bold" style={textColor}>
           {adData.name}
         </h2>
         <div className="flex gap-3">
+          <ReportDropdown
+            targetId={id}
+            reportType="jobSeekerAd"
+            iconSrc="/images/report_ads.svg"
+            placement="ad"
+            ownerId={adData?.owner?._id}
+          />
           <div
             className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
             onClick={handleCopyLink}
@@ -550,6 +557,13 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
         )}
       </div>
       <div className="flex justify-center gap-3">
+        <ReportDropdown
+          targetId={id}
+          reportType="jobSeekerAd"
+          iconSrc="/images/report_ads.svg"
+          placement="ad"
+          ownerId={adData?.owner?._id}
+        />
         <div
           className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
           onClick={handleCopyLink}
@@ -707,8 +721,6 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto scrollbar-hidden"
           onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           style={{ userSelect: "none" }}
         >
           <MobileLayout />

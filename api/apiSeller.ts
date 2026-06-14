@@ -1,4 +1,3 @@
-// apiSeller.ts
 // Client-side function to call GET /public/ads/seller - works in Next.js frontend (no 'use client' needed in this file)
 
 const BASE_URL = "https://barchasb-server-admin.liara.run";

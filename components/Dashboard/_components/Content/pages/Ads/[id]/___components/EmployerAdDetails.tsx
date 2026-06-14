@@ -6,6 +6,7 @@ import ToastPortal from "@/components/common/ToastPortal";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import ReportDropdown from "@/components/common/ReportDropdown";
 
 interface Props {
   id: string;
@@ -207,7 +208,6 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
     fetchAd();
   }, [id]);
 
-  // فوکوس روی اسکرول‌کننده برای فعال شدن رویدادهای صفحه کلید در دسکتاپ
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.focus();
@@ -219,7 +219,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
 
   const textColor = { color: "#143A62" };
 
-  // ========== محتوای دسکتاپ (بدون فوتر مطلق) ==========
+  // ========== محتوای دسکتاپ ==========
   const DesktopLayout = () => (
     <div className="space-y-6">
       <div className="flex gap-6 items-start h-[90%]">
@@ -351,7 +351,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
     </div>
   );
 
-  // ========== محتوای موبایل (بدون فوتر دکمه‌ها – فوتر جداگانه است) ==========
+  // ========== محتوای موبایل ==========
   const MobileLayout = () => (
     <div className="w-full flex flex-col gap-[1vh] text-right text-[2vh]">
       <div className="flex flex-col items-center gap-2 my-2">
@@ -377,12 +377,19 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
         )}
       </div>
 
-      {/* ردیف عنوان + آیکون‌های کپی/اشتراک (مانند کد اصلی موبایل) */}
+      {/* ردیف عنوان + آیکون‌ها (ترتیب: گزارش اول) */}
       <div className="flex justify-between items-center">
         <h2 className="text-[3vh] font-bold" style={textColor}>
           {adData.name}
         </h2>
-        <div className="flex gap-3">
+        <div className="flex gap-3 relative">
+          <ReportDropdown
+            targetId={id}
+            reportType="employerAd"
+            iconSrc="/images/report_ads.svg"
+            placement="ad"
+            ownerId={adData?.owner?._id}
+          />
           <div
             className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
             onClick={handleCopyLink}
@@ -505,14 +512,13 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
     </div>
   );
 
-  // ========== فوتر دسکتاپ (دکمه‌ها همیشه نمایش داده می‌شوند) ==========
+  // ========== فوتر دسکتاپ ==========
   const DesktopFooter = () => {
     const handleChatClick = () => {
       if (!user) {
         router.push("/login");
         return;
       }
-      // فقط در صورتی که کاربر مالک آگهی نباشد چت باز شود
       if (adData.owner?._id !== user._id) {
         router.push(`/dashboard/chat/EmployerAd/${id}/${adData.owner._id}`);
       }
@@ -529,14 +535,12 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
     return (
       <div className="flex flex-col md:flex-row md:justify-between items-center gap-4 mt-4 pt-2 border-t border-gray-200">
         <div className="flex justify-center gap-3">
-          {/* دکمه چت - همیشه نمایش داده می‌شود */}
           <button
             onClick={handleChatClick}
             className="bg-[#143A62D9] text-white w-32 h-12 rounded-lg flex items-center justify-center"
           >
             چت در برچسب
           </button>
-          {/* دکمه اطلاعات تماس - همیشه نمایش داده می‌شود */}
           <button
             onClick={handleContactClick}
             className="bg-[#143A62D9] text-white w-32 h-12 rounded-lg flex items-center justify-center"
@@ -544,7 +548,14 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
             اطلاعات تماس
           </button>
         </div>
-        <div className="flex justify-center gap-3">
+        <div className="flex justify-center gap-3 relative">
+          <ReportDropdown
+            targetId={id}
+            reportType="employerAd"
+            iconSrc="/images/report_ads.svg"
+            placement="ad"
+            ownerId={adData?.owner?._id}
+          />
           <div
             className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
             onClick={handleCopyLink}
@@ -570,7 +581,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
     );
   };
 
-  // ========== فوتر موبایل (دکمه‌ها همیشه نمایش داده می‌شوند) ==========
+  // ========== فوتر موبایل ==========
   const MobileFooter = () => {
     const handleChatClick = () => {
       if (!user) {
@@ -608,7 +619,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
     );
   };
 
-  // ========== مودال مشترک با قابلیت دو کلیک ==========
+  // ========== مودال تماس ==========
   const ContactModal = () => {
     if (!showContactModal) return null;
     const displayPhone = showModalFullPhone
@@ -675,7 +686,6 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
 
   return (
     <div className="relative p-4 md:p-8 bg-gray-50 text-right h-[78vh] text-[2vh] flex flex-col">
-      {/* دسکتاپ: محتوای اسکرول‌پذیر + فوتر عادی */}
       <div className="hidden md:flex flex-col h-full">
         <div
           ref={scrollContainerRef}
@@ -692,14 +702,11 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
         <DesktopFooter />
       </div>
 
-      {/* موبایل: ساختار flex column با فوتر ثابت در پایین */}
       <div className="block md:hidden flex flex-col h-full">
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto scrollbar-hidden"
           onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           style={{ userSelect: "none" }}
         >
           <MobileLayout />

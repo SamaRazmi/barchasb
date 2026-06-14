@@ -1,4 +1,3 @@
-// authApi.ts
 import { get } from "./apiClient";
 
 export interface User {

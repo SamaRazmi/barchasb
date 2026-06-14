@@ -7,7 +7,11 @@ import Button from "@mui/material/Button";
 import { useFormStore, UserType } from "@/store/formStore";
 import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { checkAuthorization, AuthorizeRequest } from "@/api/authorizeService";
+import {
+  checkAuthorization,
+  attachAdToReservation,
+  AuthorizeRequest,
+} from "@/api/authorizeService"; 
 import {
   submitDigitalAd,
   submitEmployerAd,
@@ -48,7 +52,6 @@ const Form5: React.FC = () => {
     console.log(`[Form5][${t}] Auto saved data:`, getFormData(t));
   }, [pathname, setField, getFormData, setUserType]);
 
-  // تابع ارسال واقعی آگهی (بدون تغییر منطق قبلی)
   const performSubmit = async (t: UserType, data: any, userId: string) => {
     let result;
     if (t === "digital") {
@@ -67,11 +70,9 @@ const Form5: React.FC = () => {
     return result;
   };
 
-  // تابع اصلی که ابتدا authorize و سپس submit می‌کند
   const handleAuthorizeAndSubmit = async () => {
     const t = getFormType();
     const formDataRaw = getFormData(t);
-    // تبدیل به any برای دسترسی به خواص
     const data = formDataRaw as any;
     if (!data || !user) return;
 
@@ -79,10 +80,10 @@ const Form5: React.FC = () => {
     setAuthError(null);
 
     try {
-      // 1) ساخت درخواست authorize بر اساس اطلاعات فرم
       const actions: ("CREATE_AD" | "SPECIAL_AD" | "LADDER")[] = ["CREATE_AD"];
       if (data.SPECIAL_AD === true) actions.push("SPECIAL_AD");
       if (data.LADDER === true) actions.push("LADDER");
+
       let adType = "";
       if (t === "advertiser") adType = "SELL";
       else if (t === "employer") adType = "EMPLOYER";
@@ -104,8 +105,7 @@ const Form5: React.FC = () => {
         categoryId = firstCat;
       }
 
-      const packageType =
-        data.paymentMethod === "subscription" ? "premium-bundle" : "free";
+      const packageType = data.paymentMethod === "subscription" ? "premium-bundle" : "free";
 
       const authReq: AuthorizeRequest = {
         actions,
@@ -118,6 +118,7 @@ const Form5: React.FC = () => {
       };
 
       const authResult = await checkAuthorization(authReq);
+
       if (!authResult.success) {
         if (authResult.error.action === "SPECIAL_AD") {
           setAuthError(
@@ -136,9 +137,23 @@ const Form5: React.FC = () => {
         return;
       }
 
-      // 2) در صورت موفقیت، آگهی را ارسال کن
-      await performSubmit(t, data, user._id);
-      // پس از موفقیت، داده‌های فرم پاک می‌شوند (در handleGoToDashboard)
+      // ✅ موفقیت – دریافت reservationId (الان به درستی تایپ شده)
+      const reservationId = authResult.reservationId;
+      if (!reservationId) {
+        throw new Error("reservationId از سرور دریافت نشد");
+      }
+
+      // 2) ارسال آگهی و دریافت adId
+      const adResult = await performSubmit(t, data, user._id);
+      const adId = adResult?._id || adResult?.id;
+      if (!adId) {
+        throw new Error("شناسه آگهی پس از ثبت دریافت نشد");
+      }
+
+      // 3) چسباندن آگهی به رزرو
+      await attachAdToReservation(reservationId, adId);
+      console.log("✅ Ad attached to reservation successfully");
+
     } catch (err: any) {
       console.error("❌ Error in authorization or submission:", err);
       setAuthError(err.message || "خطای ناشناخته در ثبت آگهی");
@@ -147,7 +162,6 @@ const Form5: React.FC = () => {
     }
   };
 
-  // جایگزینی useEffect قبلی که مستقیماً submit می‌کرد
   useEffect(() => {
     if (submittedRef.current) return;
     if (userLoading || !user) return;
@@ -158,13 +172,11 @@ const Form5: React.FC = () => {
 
   const handleGoToDashboard = () => {
     setLoading(true);
-
     const t = getFormType();
     const formData = getFormData(t) as any;
     Object.keys(formData).forEach((key) => {
       setField(t, key, "");
     });
-
     console.log(`[Form5][${t}] Data cleared before dashboard`);
     router.push("/dashboard");
   };
@@ -189,7 +201,6 @@ const Form5: React.FC = () => {
 
           <div className="flex-1 flex justify-center items-center relative">
             <div className="absolute top-1/2 left-1/2 w-[85%] sm:w-[50%] h-[95%] bg-white rounded-xl flex flex-col justify-center items-center z-10 p-6 my-[1vh] transform -translate-x-1/2 -translate-y-1/2">
-              {/* نمایش خطای مجوز در صورت وجود */}
               {authError ? (
                 <>
                   <div className="text-red-600 text-[2vh] sm:text-[2.6vh] font-semibold mb-4 text-center">
@@ -211,7 +222,6 @@ const Form5: React.FC = () => {
                   <div className="text-[#FF8832] text-[2vh] sm:text-[2.6vh] font-semibold mb-8 text-center drop-shadow-lg">
                     در انتظار تایید...
                   </div>
-
                   <div className="relative w-[14vh] h-[14vh] flex justify-center items-center mb-8">
                     <div className="absolute w-full h-full animate-spin-slow">
                       {[2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
@@ -233,7 +243,6 @@ const Form5: React.FC = () => {
                       })}
                     </div>
                   </div>
-
                   <div className="text-gray-600 text-[1.2vh] sm:text-[1.6vh] text-center px-4">
                     جزئیات آگهی به پشتیبانی فرستاده شد و در حال بررسی است
                     <br />
@@ -244,7 +253,7 @@ const Form5: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 items-center w-full justify-center mt-4 text-[2vh] sm:text-[2.4vh] md:text-[2.6vh] ">
+          <div className="flex gap-4 items-center w-full justify-center mt-4 text-[2vh] sm:text-[2.4vh] md:text-[2.6vh]">
             <Button
               onClick={handleGoToDashboard}
               className="w-[35%] sm:w-[25%] h-[6vh] sm:h-[7.5vh] rounded-[10px]"

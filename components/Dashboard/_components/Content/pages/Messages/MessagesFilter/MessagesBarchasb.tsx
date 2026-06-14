@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   fetchInAppNotifications,
   InAppNotification,
   markNotificationAsRead,
 } from "@/api/apiNotifications";
-import { getDevices } from "@/api/apiDevices";
+import { getDevices, markSessionAsRead } from "@/api/apiDevices";
 
 interface DeviceSession {
-  _id: string;
+  id: string;
   deviceInfo?: {
     deviceType: string;
     browser: string;
@@ -22,6 +22,17 @@ interface DeviceSession {
   lastActiveAt: string;
   createdAt: string;
   isActive: boolean;
+  isRead?: boolean;
+}
+
+interface GroupedDevice {
+  key: string;
+  deviceType: string;
+  browser: string;
+  ip: string;
+  lastActiveAt: string;
+  sessionIds: string[];
+  hasUnread: boolean; // اضافه شد: آیا حداقل یک جلسه در این گروه خوانده نشده است؟
 }
 
 export default function MessagesBarchasb() {
@@ -30,10 +41,58 @@ export default function MessagesBarchasb() {
   const [expandedNotifId, setExpandedNotifId] = useState<string | null>(null);
 
   const [devices, setDevices] = useState<DeviceSession[]>([]);
+  const [groupedDevices, setGroupedDevices] = useState<GroupedDevice[]>([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
-  const [expandedDeviceId, setExpandedDeviceId] = useState<string | null>(null);
+  const [expandedDeviceKey, setExpandedDeviceKey] = useState<string | null>(
+    null,
+  );
 
-  // اعلان‌ها
+  // گروه‌بندی با محاسبه وضعیت خوانده نشده
+  const groupDevices = useCallback(
+    (rawDevices: DeviceSession[]): GroupedDevice[] => {
+      const groupMap = new Map<string, GroupedDevice>();
+
+      for (const dev of rawDevices) {
+        if (!dev.id) continue;
+
+        const deviceType =
+          dev.deviceInfo?.deviceType || dev.deviceType || "نامشخص";
+        const browser = dev.deviceInfo?.browser || dev.browser || "نامشخص";
+        const ip = dev.deviceInfo?.ip || dev.ip || "نامشخص";
+        const key = `${deviceType}|${browser}|${ip}`;
+        const lastActive = dev.lastActiveAt;
+        const isUnread = !dev.isRead; // true اگر نخوانده باشد
+
+        if (!groupMap.has(key)) {
+          groupMap.set(key, {
+            key,
+            deviceType,
+            browser,
+            ip,
+            lastActiveAt: lastActive,
+            sessionIds: [dev.id],
+            hasUnread: isUnread,
+          });
+        } else {
+          const existing = groupMap.get(key)!;
+          existing.sessionIds.push(dev.id);
+          // به‌روزرسانی hasUnread: اگر قبلاً true بوده یا این جلسه نخوانده باشد
+          existing.hasUnread = existing.hasUnread || isUnread;
+          if (new Date(lastActive) > new Date(existing.lastActiveAt)) {
+            existing.lastActiveAt = lastActive;
+          }
+        }
+      }
+
+      return Array.from(groupMap.values()).sort(
+        (a, b) =>
+          new Date(b.lastActiveAt).getTime() -
+          new Date(a.lastActiveAt).getTime(),
+      );
+    },
+    [],
+  );
+
   useEffect(() => {
     setLoadingNotifs(true);
     fetchInAppNotifications()
@@ -45,20 +104,44 @@ export default function MessagesBarchasb() {
       .finally(() => setLoadingNotifs(false));
   }, []);
 
-  // دستگاه‌ها
-  useEffect(() => {
+  const loadDevices = useCallback(async () => {
     setLoadingDevices(true);
-    getDevices()
-      .then((res) => {
-        const sessions = res?.sessions || [];
-        setDevices(sessions);
-      })
-      .catch((err) => {
-        console.error("خطا در دریافت دستگاه‌ها:", err);
-        setDevices([]);
-      })
-      .finally(() => setLoadingDevices(false));
-  }, []);
+    try {
+      const res = await getDevices();
+      const sessions = res?.sessions || [];
+      setDevices(sessions);
+      const grouped = groupDevices(sessions);
+      setGroupedDevices(grouped);
+    } catch (err) {
+      console.error("خطا در دریافت دستگاه‌ها:", err);
+      setDevices([]);
+      setGroupedDevices([]);
+    } finally {
+      setLoadingDevices(false);
+    }
+  }, [groupDevices]);
+
+  useEffect(() => {
+    loadDevices();
+  }, [loadDevices]);
+
+  const markGroupAsRead = async (group: GroupedDevice) => {
+    const validIds = group.sessionIds.filter(
+      (id) => id && typeof id === "string",
+    );
+    if (validIds.length === 0) return;
+
+    try {
+      await Promise.all(
+        validIds.map((sessionId) => markSessionAsRead(sessionId)),
+      );
+      console.log(`✅ گروه ${group.deviceType} - ${group.browser} خوانده شد`);
+      await loadDevices();
+      window.dispatchEvent(new Event("refreshUnreadCounts"));
+    } catch (err) {
+      console.error("خطا در علامت‌گذاری دستگاه:", err);
+    }
+  };
 
   const handleNotifClick = async (notif: InAppNotification) => {
     setExpandedNotifId((prev) => (prev === notif.id ? null : notif.id));
@@ -75,8 +158,16 @@ export default function MessagesBarchasb() {
     }
   };
 
-  const handleDeviceClick = (deviceId: string) => {
-    setExpandedDeviceId((prev) => (prev === deviceId ? null : deviceId));
+  const handleDeviceClick = async (deviceKey: string) => {
+    const willExpand = expandedDeviceKey !== deviceKey;
+    setExpandedDeviceKey((prev) => (prev === deviceKey ? null : deviceKey));
+
+    if (willExpand) {
+      const group = groupedDevices.find((g) => g.key === deviceKey);
+      if (group) {
+        await markGroupAsRead(group);
+      }
+    }
   };
 
   const formatDate = (isoString: string) => {
@@ -90,36 +181,33 @@ export default function MessagesBarchasb() {
     });
   };
 
-  const DeviceCard = ({ device }: { device: DeviceSession }) => {
-    const isExpanded = expandedDeviceId === device._id;
-
-    const deviceType =
-      device.deviceInfo?.deviceType || device.deviceType || "نامشخص";
-    const browser = device.deviceInfo?.browser || device.browser || "نامشخص";
-    const ip = device.deviceInfo?.ip || device.ip || "نامشخص";
+  const DeviceCard = ({ device }: { device: GroupedDevice }) => {
+    const isExpanded = expandedDeviceKey === device.key;
+    // رنگ دایره: اگر hasUnread == true -> قرمز (نخوانده)، در غیر این صورت سبز (خوانده شده)
+    const dotColorClass = device.hasUnread ? "bg-red-500" : "bg-green-500";
 
     return (
       <div
-        onClick={() => handleDeviceClick(device._id)}
+        onClick={() => handleDeviceClick(device.key)}
         className="bg-transparent rounded-xl shadow-md p-4 border-r-4 border-gray-300 transition-all cursor-pointer"
       >
         <div className="flex justify-between items-start">
           <div className="text-left">
             <h3 className="text-lg font-semibold text-gray-800 mt-1">
-              {deviceType} - {browser}
+              {device.deviceType} - {device.browser}
             </h3>
           </div>
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span>
+          <span
+            className={`inline-block w-2.5 h-2.5 rounded-full ${dotColorClass}`}
+          ></span>
         </div>
 
         {isExpanded && (
           <div className="mt-3 pt-2 border-t border-gray-200">
             <p className="text-gray-600 text-sm">
-              <strong>نوع دستگاه:</strong> {deviceType}
+              <strong>نوع دستگاه:</strong> {device.deviceType}
               <br />
-              <strong>مرورگر:</strong> {browser}
-              <br />
-              <strong>IP:</strong> {ip}
+              <strong>مرورگر:</strong> {device.browser}
               <br />
               <strong>آخرین فعالیت:</strong> {formatDate(device.lastActiveAt)}
             </p>
@@ -166,7 +254,6 @@ export default function MessagesBarchasb() {
 
   return (
     <div className="w-full max-w-3xl mx-auto p-4">
-      {/* Notifications */}
       <div className="mb-8">
         <h2 className="text-lg font-bold text-right text-gray-700 mb-3 border-b pb-1">
           🔔 پیام‌های سیستم
@@ -180,23 +267,24 @@ export default function MessagesBarchasb() {
         )}
       </div>
 
-      {/* Devices */}
       <div>
         <h2 className="text-lg font-bold text-right text-gray-700 mb-3 border-b pb-1">
           📱 دستگاه‌های متصل
         </h2>
         {loadingDevices ? (
           <div>در حال بارگذاری دستگاه‌ها...</div>
-        ) : devices.length === 0 ? (
+        ) : groupedDevices.length === 0 ? (
           <div>هیچ دستگاه فعالی یافت نشد.</div>
         ) : (
           <div className="space-y-3">
-            {devices.map((device, index) => (
-              <DeviceCard key={device._id || index} device={device} />
+            {groupedDevices.map((device) => (
+              <DeviceCard key={device.key} device={device} />
             ))}
           </div>
         )}
       </div>
+
+      <div className="h-96"></div>
     </div>
   );
 }

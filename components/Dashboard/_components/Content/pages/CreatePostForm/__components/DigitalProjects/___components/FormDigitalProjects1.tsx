@@ -71,6 +71,13 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
   const [showNextForm, setShowNextForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // تابع کمکی برای تبدیل رشته بودجه به عدد (حذف کاما)
+  const parseBudget = (budgetStr: string): number => {
+    if (!budgetStr) return 0;
+    const cleaned = budgetStr.replace(/,/g, "");
+    return Number(cleaned);
+  };
+
   useEffect(() => {
     if (digitalData.person) {
       setActiveTab(digitalData.person);
@@ -103,6 +110,16 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
       setErrorMessage("لطفا تمام فیلدهای ضروری را پر کنید");
       return;
     }
+
+    // تبدیل مقادیر بودجه به عدد با حذف کاما
+    const min = parseBudget(state.minBudget);
+    const max = parseBudget(state.maxBudget);
+
+    if (min >= max) {
+      setErrorMessage("حداکثر بودجه باید بیشتر از حداقل بودجه باشد");
+      return;
+    }
+
     setField("digital", "requestType", requestType);
     setField("digital", "minBudget", state.minBudget);
     setField("digital", "maxBudget", state.maxBudget);
@@ -110,7 +127,6 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
     setField("digital", "description", state.description);
     if (mainImage) setField("digital", "mainImage", mainImage);
     setField("digital", "person", activeTab);
-    // ذخیره نهایی مقادیر زمان
     setField("digital", "durationUnit", durationUnit);
     setField("digital", "durationAmount", durationAmount);
 
@@ -127,12 +143,10 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
       className="relative z-10 flex flex-col sm:flex-row justify-center items-stretch sm:items-start h-[90%] sm:mt-4 px-3"
       ref={parentRef}
     >
-      {/* بک‌گراند رنگی */}
       <div
         className="absolute inset-0 w-full h-full rounded-[20px]"
         style={{ backgroundColor: "rgba(247,247,247,0.98)", zIndex: 0 }}
       />
-      {/* بک‌گراند تصویر */}
       <img
         src="/images/bg_support_formik_desk.svg"
         alt=""
@@ -140,7 +154,6 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
         style={{ zIndex: 1 }}
         loading="lazy"
       />
-      {/* دکمه Close در موبایل */}
       <div className="absolute top-2 left-2 sm:hidden z-30">
         <button
           onClick={() => {
@@ -152,7 +165,6 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
           ✕
         </button>
       </div>
-      {/* دکمه برگشت */}
       <div
         className="hidden sm:flex absolute top-0 right-1 z-50 bg-gray-200 p-1 rounded-full cursor-pointer items-center justify-center"
         onClick={() => router.push("/dashboard/createform")}
@@ -174,9 +186,7 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
           </div>
         )}
 
-        {/* فرم دو ستونه */}
         <div className="relative z-20 flex flex-col sm:flex-row justify-center items-start w-full sm:w-[85%] gap-1 sm:gap-2 md:gap-6 mr-[10%]">
-          {/* ستون اول */}
           <div className="flex flex-col gap-2 sm:gap-2 sm:flex-1 w-[99%] mr-[-10%] md:mr-[0%] sm:w-[85%] items-center sm:items-start">
             <div
               className="flex items-center gap-2 cursor-pointer my-[0.6vh] md:my-[2vh]"
@@ -191,8 +201,15 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
                 عکس پروفایل
               </span>
             </div>
-
-            {/* حداقل بودجه */}
+            <FloatingSelect
+              placeholder="نوع درخواست"
+              value={requestType}
+              options={[
+                { label: "درخواست دهنده", value: "requester" },
+                { label: "ارائه دهنده", value: "provider" },
+              ]}
+              onChange={(value) => handleRequestTypeChange(value)}
+            />
             <FloatingInput
               placeholder="حداقل بودجه (تومان)"
               variant="input"
@@ -200,41 +217,19 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
               onChange={(val) => setState({ ...state, minBudget: val })}
               inputType="price"
             />
-
-            {/* توضیحات */}
             <ModalTriggerInput
               placeholder="توضیحات"
               value={state.description}
               onClick={() => setDescriptionModalOpen(true)}
             />
+          </div>
 
-            {/* سطر آخر ستون اول: انتخاب واحد و مقدار */}
+          <div className="flex flex-col gap-1 sm:gap-1 sm:flex-1 w-full items-start mt-[2%]">
             <DualFloatingSelect
               onChange={handleDurationChange}
               width="77%"
               height="6.5vh"
             />
-          </div>
-
-          {/* ستون دوم */}
-          <div className="flex flex-col gap-1 sm:gap-1 sm:flex-1 w-full items-start mt-[2%]">
-            {/* نوع درخواست */}
-            <FloatingSelect
-              placeholder="نوع درخواست"
-              value={requestType}
-              options={[
-                {
-                  label: "درخواست دهنده",
-                  value: "requester",
-                },
-                {
-                  label: "ارائه دهنده",
-                  value: "provider",
-                },
-              ]}
-              onChange={(value) => handleRequestTypeChange(value)}
-            />
-            {/* عنوان آگهی */}
             <FloatingInput
               placeholder="عنوان آگهی"
               variant="input"
@@ -242,8 +237,6 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
               onChange={(val) => setState({ ...state, title: val })}
               inputType="alphanumeric"
             />
-
-            {/* حداکثر بودجه */}
             <FloatingInput
               placeholder="حداکثر بودجه (تومان)"
               variant="input"
@@ -251,8 +244,6 @@ const FormDigitalProjects1: React.FC<{ onClose?: () => void }> = ({
               onChange={(val) => setState({ ...state, maxBudget: val })}
               inputType="price"
             />
-
-            {/* دکمه مرحله بعد */}
             <Button
               onClick={handleNextStep}
               className="w-[76%] h-[7vh] mt-1 rounded-[10px]"

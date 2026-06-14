@@ -118,7 +118,7 @@ const PlansContent: React.FC = () => {
     return (
       <>
         <div
-          className="relative w-full h-full bg-cover bg-center"
+          className="relative w-full h-full bg-cover bg-center rounded-3xl"
           style={{ backgroundImage: "url('/images/plans_bg.svg')" }}
         >
           <ActiveSubscriptionDisplay subscription={subscription} />

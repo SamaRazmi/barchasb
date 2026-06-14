@@ -63,7 +63,7 @@ const Settings: React.FC = () => {
         onSubmit={handleSubmit}
       >
         {({ values, setFieldValue, errors, touched }) => (
-          <Form className="flex flex-col items-center gap-[6vh] w-full sm:w-[85%]">
+          <Form className="flex flex-col items-center gap-[6vh] w-full lg:w-[85%]">
             {/* فیلد جستجو */}
             <div className="relative w-full">
               <Field
@@ -85,15 +85,15 @@ const Settings: React.FC = () => {
             </div>
 
             {/* انتخاب تعداد اعلان */}
-            <div className="flex items-center justify-between w-full rounded-[10px] md:px-4 bg-[#143A621A] h-[6vh]">
-              <span className="text-[1.2vh] md:text-[2vh] text-[#143A62] text-center font-medium right-1 md:right-4">
+            <div className="flex items-center justify-between w-full rounded-[10px] px-2 lg:px-4 bg-[#143A621A] h-[6vh]">
+              <span className="text-[1.2vh]  lg:text-[2vh] text-[#143A62] text-center font-medium right-1 lg:right-4">
                 چند اعلان را می‌خواهید استفاده کنید :
               </span>
 
-              <div className="flex items-center gap-[2px]">
+              <div className="flex items-center lg:gap-[2px]">
                 <button
                   type="button"
-                  className="text-[#143A62] text-[2vh] w-[3vh] h-[3vh] md:text-[3vh] md:w-[5vh] md:h-[5vh] flex items-center justify-center"
+                  className="text-[#143A62] text-[2vh] lg:text-[3vh] w-[2vh] h-[2vh]  md:w-[5vh] md:h-[5vh] flex items-center justify-center"
                   onClick={() =>
                     setFieldValue(
                       "notificationCount",
@@ -104,13 +104,13 @@ const Settings: React.FC = () => {
                   -
                 </button>
 
-                <div className="flex items-center justify-center bg-white rounded-[6px] w-[0.5vh] h-[0.5vh] md:w-[6vh] md:h-[6vh]">
+                <div className="flex items-center justify-center bg-white rounded-[6px] w-[5vh] h-[5vh] md:w-[6vh] md:h-[6vh]">
                   {values.notificationCount}
                 </div>
 
                 <button
                   type="button"
-                  className="text-[#143A62] text-[2vh] w-[3vh] h-[3vh] md:text-[3vh] md:w-[5vh] md:h-[5vh] flex items-center justify-center"
+                  className="text-[#143A62] text-[2vh] lg:text-[3vh] w-[2vh] h-[2vh]  md:w-[5vh] md:h-[5vh] flex items-center justify-center"
                   onClick={() =>
                     setFieldValue(
                       "notificationCount",

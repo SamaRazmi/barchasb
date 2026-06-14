@@ -118,18 +118,18 @@ const CardContent: React.FC<CardProps> = ({
   };
 
   return (
-    <div className="w-full p-3 flex flex-col justify-between bg-white rounded-[20px] shadow-lg h-[36vh] overflow-y-hidden">
+    <div className="w-full p-2 md:p-3 flex flex-col justify-between bg-white rounded-[20px] shadow-lg min-h-[30vh] md:h-[36vh] overflow-y-hidden">
       <div className="flex flex-col items-start text-right">
         <img
           src={imageSrc}
           alt={title}
-          className="w-[7vh] h-[7vh] rounded-[15px] mt-[1%] mb-[1%]"
+          className="w-[7vh] h-[7vh] rounded-[15px] mt-1 md:mt-[1%] mb-1 md:mb-[1%]"
         />
 
-        <h3 className="font-medium text-[#143A62] text[1.6vh] sm:text-[2.4vh] line-clamp-2">
+        <h3 className="font-medium text-[#143A62] text-[1.6vh] sm:text-[2.4vh] leading-tight md:leading-normal line-clamp-2">
           {title}
         </h3>
-        <p className="text-[#143A62] opacity-80 text-[1.2vh] sm:text-[1.8vh] line-clamp-1">
+        <p className="text-[#143A62] opacity-80 text-[1.2vh] sm:text-[1.8vh] leading-snug md:leading-normal line-clamp-1">
           {description}
         </p>
       </div>
@@ -144,7 +144,7 @@ const CardContent: React.FC<CardProps> = ({
         }}
       ></div>
 
-      <div className="bg-gray-50 text-[#143A62] rounded-xl py-2 px-5 mt-1 inline-flex w-fit items-center">
+      <div className="bg-gray-50 text-[#143A62] rounded-xl py-1 md:py-2 px-3 md:px-5 mt-1 inline-flex w-fit items-center">
         <img
           src="/images/citycard-icon.svg"
           alt="City"
@@ -155,7 +155,7 @@ const CardContent: React.FC<CardProps> = ({
         </p>
       </div>
 
-      <div className="bg-gray-50 text-[#143A62] rounded-xl py-2 px-5 mt-1 inline-flex w-fit items-center">
+      <div className="bg-gray-50 text-[#143A62] rounded-xl py-1 md:py-2 px-3 md:px-5 mt-1 inline-flex w-fit items-center">
         <img
           src="/images/star.svg"
           alt="Rating"
@@ -164,7 +164,7 @@ const CardContent: React.FC<CardProps> = ({
         <p className="text-[#143A62] text-[11px] font-normal">{rating}</p>
       </div>
 
-      <div className="flex justify-between items-center mt-[1vh] space-x-2">
+      <div className="flex justify-between items-center mt-1 md:mt-[1vh] space-x-1 md:space-x-2">
         <button
           onClick={handleMarkAd}
           className={`w-[20%] h-[4vh] sm:h-[5vh] rounded-[10px]

@@ -29,14 +29,14 @@ import AdsForm from "@/app/dashboard/createform/adsform/page";
 import DigitalProjectForm from "@/app/dashboard/createform/digitalprojectform/page";
 import ChatMessagesContent from "../../../Chat/[adType]/[adId]/[receiverId]/ChatMessagesContent";
 
-// ⭐ کامپوننت‌های ساپورت (questions, admin-options, ticket)
+// ⭐ کامپوننت‌های ساپورت
 import SupportQuestions from "../../../Support/SupportQuestions";
 import SupportAdminOptions from "../../../Support/Desk/SupportAdminOptions";
 import SupportTicket from "../../../Support/SupportTicket";
 import ChatWrapper from "../../../Chat/ChatWrapper";
 import ResNotifications from "./___components/ResNotifications";
 
-// کامپوننت جزئیات آگهی
+// کامپوننت جزئیات آگهی (برای هر دو نوع آگهی و پروژه دیجیتال استفاده می‌شود)
 const AdDetailsComponent = lazy(
   () => import("../../../Ads/[id]/AdDetailsComponent"),
 );
@@ -113,14 +113,20 @@ const ResContentHome: React.FC<ResContentHomeProps> = ({
     router.push(path);
   };
 
-  // ⭐ تابع تشخیص تب با اضافه شدن مسیرهای جدید
+  // ⭐ تابع تشخیص تب با پشتیبانی از جزئیات پروژه دیجیتال
   const getTabFromPath = (path: string | null): string => {
     if (!path) return "home";
+
+    // تشخیص جزئیات پروژه دیجیتال (مسیرهایی با شناسه بعد از /projects/)
+    const projectDetailsPattern = /^\/dashboard\/projects\/[^\/?#]+$/;
+    if (projectDetailsPattern.test(path)) {
+      return "project-details";
+    }
+
     if (path === "/dashboard") return "home";
 
-    // ⭐ مسیر لیست چت‌ها
+    // مسیر لیست چت‌ها
     if (path === "/dashboard/chat") return "chat-list";
-    // ⭐ مسیر پیام‌ها / اعلانات
     if (path === "/dashboard/messages") return "messages";
 
     // مسیر چت با جزئیات
@@ -132,6 +138,7 @@ const ResContentHome: React.FC<ResContentHomeProps> = ({
       return "supportAdminOptions";
     if (path === "/dashboard/support/ticket") return "supportTicket";
 
+    // تشخیص جزئیات آگهی عادی
     const adDetailsPattern = /^\/dashboard\/ads\/[^\/]+$/;
     if (adDetailsPattern.test(path)) return "ad-details";
 
@@ -219,6 +226,33 @@ const ResContentHome: React.FC<ResContentHomeProps> = ({
             <AdDetailsComponent />
           </Suspense>
         );
+
+      // ⭐⭐⭐ جزئیات پروژه دیجیتال (جدید) ⭐⭐⭐
+      case "project-details": {
+        // استخراج adId از مسیر: /dashboard/projects/{adId}
+        const match = pathname?.match(/\/dashboard\/projects\/([^\/?#]+)/);
+        const adId = match ? match[1] : null;
+        if (!adId) {
+          return (
+            <div className="p-4 text-center text-red-500">
+              شناسه پروژه یافت نشد
+            </div>
+          );
+        }
+        return (
+          <Suspense
+            fallback={
+              <div className="p-4 text-center">
+                در حال بارگذاری جزئیات پروژه دیجیتال...
+              </div>
+            }
+          >
+            {/* استفاده از AdDetailsComponent با ارسال adId */}
+            <AdDetailsComponent adId={adId} />
+          </Suspense>
+        );
+      }
+
       case "my-ads-details": {
         const { adId, adType } = extractMyAdsDetails(pathname || "");
         if (!adId) {
@@ -293,7 +327,7 @@ const ResContentHome: React.FC<ResContentHomeProps> = ({
       )}
 
       <div
-        className={`flex-1 flex flex-col overflow-auto overscroll-contain mt-2 bg-white rounded-lg m-2 relative ${
+        className={`flex-1 flex flex-col overflow-auto overscroll-contain mt-2 bg-white rounded-lg m-2 ${
           isChatRoute ? "p-0 m-0 rounded-none" : "p-2"
         }`}
       >
@@ -302,7 +336,7 @@ const ResContentHome: React.FC<ResContentHomeProps> = ({
         {shouldShowOrangeButton() && (
           <button
             onClick={() => router.push("/dashboard/createform")}
-            className="absolute bottom-8 right-4 w-14 h-14 bg-[#143A62] rounded-full flex items-center justify-center shadow-lg hover:bg-orange-600 transition-all focus:outline-none z-10 group"
+            className="fixed bottom-8 right-4 w-14 h-14 bg-[#143A62] rounded-full flex items-center justify-center shadow-lg hover:bg-orange-600 transition-all focus:outline-none z-[9999] group"
             aria-label="ایجاد آگهی جدید"
           >
             <span className="absolute bottom-full left-0 mb-2 px-2 py-1 bg-orange-600 text-white text-sm rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">

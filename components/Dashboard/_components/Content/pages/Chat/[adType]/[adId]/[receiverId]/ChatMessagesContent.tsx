@@ -5,6 +5,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import ReportDropdown from "@/components/common/ReportDropdown";
 
 interface Message {
   senderId: string;
@@ -293,15 +294,15 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
         <TopBar />
       </div>
 
-      {/* نوار بالایی با استایل جدید */}
+      {/* نوار بالایی با z-index بالا */}
       <div
-        className="flex items-center justify-between px-4 py-3 backdrop-blur-[15px] bg-white/30 rounded-t-xl mx-[0.5]"
+        className="relative z-[10000] flex items-center justify-between px-4 py-3 backdrop-blur-[15px] bg-white/30 rounded-t-xl mx-[0.5]"
         style={{
           borderBottom: "1px solid #143A6233",
           boxShadow: "0px 1px 6px 0px #00000026",
         }}
       >
-        {/* اطلاعات کاربر (آواتار + وضعیت) - سمت راست */}
+        {/* اطلاعات کاربر (سمت راست) */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 ring-2 ring-white/50">
             <Image
@@ -319,28 +320,40 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
           <div className="text-sm font-medium text-gray-800">{statusText}</div>
         </div>
 
-        {/* دکمه بازگشت - سمت چپ */}
-        <button
-          onClick={goBack}
-          className="w-10 h-10 rounded-full bg-white/50 backdrop-blur-sm flex items-center justify-center transition-all active:scale-95 hover:bg-white/70"
-          aria-label="بازگشت"
-        >
-          <Image
-            src="/images/back_arrow.svg"
-            alt="بازگشت"
-            width={22}
-            height={22}
-            className="cursor-pointer"
+        {/* دکمه بازگشت و گزارش (سمت چپ) */}
+        <div className="flex items-center gap-2">
+          <ReportDropdown
+            targetId={conversationId || adId}
+            reportType="chat"
+            iconSrc="/images/report_chat.svg"
+            placement="chat"
           />
-        </button>
+          <button
+            onClick={goBack}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 hover:opacity-80"
+            style={{
+              background: "#143A6233",
+              boxShadow: "0px 0px 5px 0px #00000026",
+            }}
+            aria-label="بازگشت"
+          >
+            <Image
+              src="/images/chat_arrow.svg"
+              alt="بازگشت"
+              width={6}
+              height={6}
+              className="cursor-pointer"
+            />
+          </button>
+        </div>
       </div>
 
-      {/* بخش نمایش پیام‌ها با تصویر پس‌زمینه */}
+      {/* بخش نمایش پیام‌ها */}
       <div className="flex-1 overflow-y-auto relative mx-[0.5]">
         <img
           src="/images/bg_support_ticket.svg"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
           loading="lazy"
         />
         <div className="relative z-10 mx-[0.5vh] my-2 space-y-3">
@@ -352,7 +365,6 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
                 className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}
               >
                 {isCurrentUser ? (
-                  // فرستنده (من): فلش به راست متن منتقل شد
                   <div className="flex items-center gap-2 max-w-[80%]">
                     <div
                       className="px-4 py-3 rounded-xl text-sm md:text-base break-all"
@@ -374,7 +386,6 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
                     />
                   </div>
                 ) : (
-                  // گیرنده (مقابل): فلش به چپ متن منتقل شد
                   <div className="flex items-center gap-2 max-w-[80%]">
                     <Image
                       src="/images/recevier_arrow.svg"
@@ -407,7 +418,7 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
         <div className="text-xs text-gray-500 px-4 pb-1">در حال تایپ است…</div>
       )}
 
-      {/* نوار ورودی پیام (بدون تغییر) */}
+      {/* نوار ورودی پیام */}
       <div className="flex gap-2 p-3 border-t bg-white">
         <input
           value={inputMessage}

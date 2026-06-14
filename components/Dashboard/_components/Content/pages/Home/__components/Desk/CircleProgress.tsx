@@ -22,8 +22,7 @@ const CircleProgress: React.FC<CircleProgressProps> = ({
     const updateSizes = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-
-      if (width >= 768) {
+      if (width >= 1250) {
         // ========== md و بالاتر ==========
         // دقیقاً مانند نسخه اصلی
         const newCircleSize = height * 0.2;
@@ -34,7 +33,17 @@ const CircleProgress: React.FC<CircleProgressProps> = ({
         setPercentFontClass("text-[15px]");
         setWrapperBg("bg-gray-100");
         setCardRound("rounded-[20px]");
-        setMarginBottom("mb-[1vh]");
+      } else if (width >= 780) {
+        // ========== md و بالاتر ==========
+        // دقیقاً مانند نسخه اصلی
+        const newCircleSize = height * 0.15;
+        setCircleSize(newCircleSize);
+        setStrokeWidth(10);
+        setPaddingClass("py-10 px-1");
+        setTitleFontClass("text-[1.6vh]"); // فونت نسبی به ارتفاع
+        setPercentFontClass("text-[15px]");
+        setWrapperBg("bg-gray-100");
+        setCardRound("rounded-[20px]");
       } else if (width >= 640) {
         // ========== sm (640px تا 767px) ==========
         setCircleSize(70);

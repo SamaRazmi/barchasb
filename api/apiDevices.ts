@@ -92,3 +92,10 @@ export const logoutAllDevices = async () => {
     method: "POST",
   });
 };
+
+// ✅ علامت‌گذاری یک جلسه به عنوان خوانده شده
+export const markSessionAsRead = async (sessionId: string) => {
+  return fetchWithToken(`${BASE_URL}/sessions/${sessionId}/read`, {
+    method: "PATCH",
+  });
+};

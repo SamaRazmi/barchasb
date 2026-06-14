@@ -6,6 +6,7 @@ import ToastPortal from "@/components/common/ToastPortal";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import ReportDropdown from "@/components/common/ReportDropdown";
 
 interface Props {
   id: string;
@@ -63,7 +64,6 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
 
   const fetchOwnerPhone = async () => {
     if (!user) {
-      // اینجا نباید مستقیماً صدا زده شود چون هندلر لاگین نشده را جداگانه مدیریت می‌کند
       return;
     }
 
@@ -104,13 +104,12 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
     }
   };
 
-  // ========== هندلرهای جدید برای دکمه‌های فوتر ==========
+  // هندلرهای دکمه‌های فوتر
   const handleChatClick = () => {
     if (!user) {
       router.push("/login");
       return;
     }
-    // فقط در صورتی که کاربر مالک آگهی نباشد به چت برود
     if (adData.owner?._id !== user._id) {
       router.push(`/dashboard/chat/SellerAd/${id}/${adData.owner._id}`);
     }
@@ -213,7 +212,6 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
     fetchAd();
   }, [id]);
 
-  // فوکوس روی اسکرول‌کننده برای فعال شدن رویدادهای صفحه کلید در دسکتاپ
   useEffect(() => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.focus();
@@ -225,10 +223,9 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
 
   const textColor = { color: "#143A62" };
 
-  // ========== محتوای دسکتاپ (تصاویر در راست، متن در چپ) ==========
+  // ========== محتوای دسکتاپ ==========
   const DesktopLayout = () => (
     <div className="flex gap-6 items-start h-[90%]">
-      {/* ستون تصاویر (راست) */}
       <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-2">
         <img
           src={adData.images?.[activeImage]?.url || "/images/kioskimg_card.svg"}
@@ -248,8 +245,7 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
             ))}
           </div>
         )}
-      </div>{" "}
-      {/* ستون محتوا (چپ) */}
+      </div>
       <div className="flex flex-col gap-2 flex-1">
         <h2 className="text-xl font-bold" style={textColor}>
           {adData.title}
@@ -296,7 +292,7 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
     </div>
   );
 
-  // ========== محتوای موبایل (تصاویر بالا، متن پایین، آیکون‌ها در ردیف عنوان) ==========
+  // ========== محتوای موبایل ==========
   const MobileLayout = () => (
     <div className="w-full flex flex-col gap-[1vh] text-right text-[2vh]">
       <div className="flex flex-col items-center gap-2 my-2">
@@ -322,12 +318,19 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
         )}
       </div>
 
-      {/* ردیف عنوان + آیکون‌های کپی/اشتراک */}
+      {/* ردیف عنوان + آیکون‌ها (ترتیب: گزارش اول) */}
       <div className="flex justify-between items-center">
         <h2 className="text-[3vh] font-bold" style={textColor}>
           {adData.title}
         </h2>
         <div className="flex gap-3">
+          <ReportDropdown
+            targetId={id}
+            reportType="sellerAd"
+            iconSrc="/images/report_ads.svg"
+            placement="ad"
+            ownerId={adData?.owner?._id}
+          />
           <div
             className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
             onClick={handleCopyLink}
@@ -392,18 +395,16 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
     </div>
   );
 
-  // ========== فوتر دسکتاپ (دکمه‌ها همیشه نمایش داده می‌شوند) ==========
+  // ========== فوتر دسکتاپ ==========
   const DesktopFooter = () => (
     <div className="flex flex-col md:flex-row md:justify-between items-center gap-4 mt-4 pt-2 border-t border-gray-200">
       <div className="flex justify-center gap-3">
-        {/* دکمه چت - همیشه نمایش داده می‌شود */}
         <button
           onClick={handleChatClick}
           className="bg-[#143A62D9] text-white w-32 h-12 rounded-lg flex items-center justify-center"
         >
           چت در برچسب
         </button>
-        {/* دکمه اطلاعات تماس - همیشه نمایش داده می‌شود */}
         <button
           onClick={handleContactClick}
           className="bg-[#143A62D9] text-white w-32 h-12 rounded-lg flex items-center justify-center"
@@ -412,6 +413,13 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
         </button>
       </div>
       <div className="flex justify-center gap-3">
+        <ReportDropdown
+          targetId={id}
+          reportType="sellerAd"
+          iconSrc="/images/report_ads.svg"
+          placement="ad"
+          ownerId={adData?.owner?._id}
+        />
         <div
           className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
           onClick={handleCopyLink}
@@ -436,7 +444,7 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
     </div>
   );
 
-  // ========== فوتر موبایل (فقط دو دکمه چت و اطلاعات تماس، همیشه نمایش داده می‌شوند) ==========
+  // ========== فوتر موبایل ==========
   const MobileFooter = () => (
     <div className="flex justify-center gap-3 py-3 bg-gray-50 border-t h-[28svh] border-gray-200">
       <button
@@ -454,7 +462,7 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
     </div>
   );
 
-  // ========== مودال مشترک با قابلیت دو کلیک ==========
+  // ========== مودال تماس ==========
   const ContactModal = () => {
     if (!showContactModal) return null;
     const displayPhone = showModalFullPhone
@@ -521,7 +529,6 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
 
   return (
     <div className="relative p-4 md:p-8 bg-gray-50 text-right h-[78vh] text-[2vh] flex flex-col">
-      {/* دسکتاپ: محتوای اسکرول‌پذیر + فوتر عادی */}
       <div className="hidden md:flex flex-col h-full">
         <div
           ref={scrollContainerRef}
@@ -538,14 +545,11 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
         <DesktopFooter />
       </div>
 
-      {/* موبایل: ساختار flex column با فوتر ثابت در پایین */}
       <div className="block md:hidden flex flex-col h-full">
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto scrollbar-hidden"
           onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           style={{ userSelect: "none" }}
         >
           <MobileLayout />

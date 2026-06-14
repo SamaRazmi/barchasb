@@ -106,7 +106,7 @@ const KioskContent: React.FC<KioskCardProps> = ({
   };
 
   return (
-    <div className="w-full p-4 flex flex-col justify-between bg-white rounded-[20px] shadow-lg h-[36vh] overflow-hidden">
+    <div className="w-full p-2 md:p-4 flex flex-col justify-between bg-white rounded-[20px] shadow-lg min-h-[30vh] md:h-[36vh] overflow-hidden">
       <div className="flex justify-center">
         <img
           src={imageSrc}
@@ -115,7 +115,7 @@ const KioskContent: React.FC<KioskCardProps> = ({
         />
       </div>
 
-      <h3 className="text-[#143A62] font-medium text-[1.6vh] sm:text-[2.4vh] text-center mt-[1vh] truncate">
+      <h3 className="text-[#143A62] font-medium text-[1.6vh] sm:text-[2.4vh] text-center mt-[0.5vh] md:mt-[1vh] leading-tight md:leading-normal truncate">
         {title}
       </h3>
 
@@ -129,26 +129,26 @@ const KioskContent: React.FC<KioskCardProps> = ({
         }}
       ></div>
 
-      <div className="flex justify-start items-center gap-[2vh] mt-[1vh]">
-        <div className="bg-gray-50 text-[#143A62] rounded-xl sm:py-2 sm:px-3 inline-flex items-center">
+      <div className="flex justify-start items-center gap-[1vh] md:gap-[2vh] mt-[0.5vh] md:mt-[1vh]">
+        <div className="bg-gray-50 text-[#143A62] rounded-xl py-1 px-2 md:py-2 md:px-3 inline-flex items-center">
           <img
             src="/images/citycard-icon.svg"
             alt="City"
             className="w-[2vh] h-[2vh] ml-1"
           />
-          <p className="text-[#143A62] text-[1.2vh] sm:text-[1.7vh] font-normal line-clamp-2">
+          <p className="text-[#143A62] text-[1.2vh] sm:text-[1.7vh] font-normal leading-tight md:leading-normal line-clamp-2">
             {city}
           </p>
         </div>
 
-        <div className="bg-gray-50 text-[#143A62] rounded-xl sm:py-[0.5vh] sm:px-[2vh] inline-flex items-center">
-          <p className="text-[#143A62] text-[1.2vh] sm:text-[1.7vh] font-medium line-clamp-2">
+        <div className="bg-gray-50 text-[#143A62] rounded-xl py-1 px-2 md:py-[0.5vh] md:px-[2vh] inline-flex items-center">
+          <p className="text-[#143A62] text-[1.2vh] sm:text-[1.7vh] font-medium leading-tight md:leading-normal line-clamp-2">
             {price}
           </p>
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-[0.5vh] space-x-[1vh]">
+      <div className="flex justify-between items-center mt-[0.5vh] md:mt-[0.5vh] space-x-[0.5vh] md:space-x-[1vh]">
         <button
           onClick={handleMarkAd}
           className={`w-[20%] h-[4vh] sm:h-[5vh] rounded-[10px]
@@ -174,9 +174,9 @@ const KioskContent: React.FC<KioskCardProps> = ({
           <img
             src="/images/more-option-icon.svg"
             alt="Options"
-            className="w-[2vh] h-[2vh] mr-1 md:ml-2 "
+            className="w-[2vh] h-[2vh] mr-1 md:ml-2"
           />
-          <span className="font-semibold text-[1.2vh] sm:text-[2vh] pr-2 sm:pl-1 whitespace-nowrap">
+          <span className="font-semibold text-[1.2vh] sm:text-[2vh] pr-2 sm:pl-1 whitespace-nowrap leading-tight md:leading-normal">
             جزئیات بیشتر
           </span>
         </button>

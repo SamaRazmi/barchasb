@@ -18,8 +18,8 @@ export default function Footer() {
     {
       title: "کاربران",
       links: [
-        { href: "/employer/faq", label: "سوالات متداول " },
-        { href: "/employer/rules", label: "قوانین و مقررات " },
+        { href: "/faq", label: "سوالات متداول " },
+        { href: "/rules", label: "قوانین و مقررات " },
         // { href: "/auth/worker", label: "ورود/ثبت نام کارجو" },
         // { href: "/jobs", label: "لیست مشاغل" },
         // { href: "/ads", label: "آگهی های استخدام" },

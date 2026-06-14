@@ -66,6 +66,15 @@ const AddJobModal: React.FC<AddJobModalProps> = ({
   const setField = useFormStore((state) => state.setField);
   const getFormData = useFormStore((state) => state.getFormData);
 
+  // تشخیص صفحه‌نمایش موبایل (عرض کمتر از 768px)
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkScreen = () => setIsMobile(window.innerWidth < 768);
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
   // اسکرول با صفحه کلید
   useEffect(() => {
     const handleKeyScroll = (e: KeyboardEvent) => {
@@ -289,6 +298,11 @@ const AddJobModal: React.FC<AddJobModalProps> = ({
           left: parentRect.left + window.scrollX + parentRect.width / 2,
           transform: "translate(-50%, -50%)",
           zIndex: 1001,
+          // در حالت موبایل عرض و ارتفاع را ۸۵٪ والد قرار بده
+          ...(isMobile && {
+            width: `${parentRect.width * 0.9}px`,
+            height: `${parentRect.height * 0.9}px`,
+          }),
         }}
         className="bg-white rounded-xl flex flex-col overflow-hidden w-[75%] sm:w-[55%] md:w-[35%] h-[50%] sm:h-[65%] md:h-[75%]"
       >

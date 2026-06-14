@@ -45,24 +45,24 @@ const ActiveSubscriptionDisplay: React.FC<ActiveSubscriptionDisplayProps> = ({
   const endDate = new Date(subscription.endDate).toLocaleDateString("fa-IR");
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-4">
+    <div className="w-full h-full flex items-center justify-center p-2 md:p-4">
       <div
         className="max-w-2xl w-full rounded-3xl shadow-2xl overflow-hidden border border-white/20"
         style={{ background: bgGradient }}
       >
-        <div className="p-6 sm:p-8 text-center">
-          <div className="mb-4">
+        <div className="p-3 md:p-8 text-center">
+          <div className="mb-2 md:mb-4">
             <span
-              className="inline-block px-6 py-2 rounded-full text-lg sm:text-xl font-bold shadow-md"
+              className="inline-block px-3 py-1 md:px-6 md:py-2 rounded-full text-sm md:text-xl font-bold shadow-md"
               style={{ backgroundColor: color, color: "#fff" }}
             >
               اشتراک فعال
             </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#143A62] mb-4">
+          <h2 className="text-xl md:text-3xl font-extrabold text-[#143A62] mb-2 md:mb-4">
             پلن {planName} {durationText}
           </h2>
-          <div className="space-y-3 text-right pr-4 sm:pr-12 text-gray-700">
+          <div className="space-y-2 md:space-y-3 text-right pr-2 md:pr-12 text-gray-700">
             <p className="flex justify-between border-b border-gray-300 pb-2">
               <span className="font-semibold">مبلغ پرداختی:</span>
               <span>{plan.price.toLocaleString("fa-IR")} تومان</span>
@@ -80,7 +80,7 @@ const ActiveSubscriptionDisplay: React.FC<ActiveSubscriptionDisplayProps> = ({
               <span className="text-green-600 font-bold">فعال</span>
             </p>
           </div>
-          <div className="mt-8 text-sm text-gray-500">
+          <div className="mt-6 md:mt-8 text-xs md:text-sm text-gray-500">
             در صورت نیاز به تمدید یا تغییر پلن، با پشتیبانی تماس بگیرید.
           </div>
         </div>

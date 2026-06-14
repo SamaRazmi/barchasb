@@ -23,7 +23,7 @@ const SupportContent: React.FC<SupportContentProps> = ({ setView }) => {
             console.log("clicked");
             setActiveMobileView(null);
           }}
-          className="absolute top-5 left-3 bg-gray-200 rounded w-max z-30"
+          className="absolute top-8 left-4 bg-gray-200 rounded w-max z-30"
         >
           <img src="/images/back_arrow.svg" alt="Back" width={25} height={25} />
         </button>
@@ -38,7 +38,7 @@ const SupportContent: React.FC<SupportContentProps> = ({ setView }) => {
   return (
     <>
       {/* TopBar فقط از sm به بالا */}
-      <div className="hidden mt-[0.8vh] sm:block">
+      <div className="hidden mt-[0.8vh] md:block">
         <TopBar />
       </div>
 
@@ -50,7 +50,7 @@ const SupportContent: React.FC<SupportContentProps> = ({ setView }) => {
           loading="lazy"
         />
 
-        <div className="relative z-10 flex flex-col py-[4vh] sm:flex-row justify-center items-center gap-6 sm:gap-[50px] md:gap-[80px] lg:gap-[110px]">
+        <div className="relative z-10 flex flex-col py-[4vh] sm:flex-row justify-center items-center gap-6 sm:gap-[50px] md:gap-[80px] lg:gap-[110px] ">
           {/* موبایل: سوالات متداول */}
           <div
             onClick={() => setActiveMobileView("questions")}

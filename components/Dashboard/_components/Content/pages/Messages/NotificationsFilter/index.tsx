@@ -101,7 +101,7 @@ export default function NotificationsFilter() {
   return (
     <div className="w-full flex flex-col items-center">
       {/* ================= DESKTOP ================= */}
-      <div className="hidden sm:block w-[40%] mt-[5vh]">
+      <div className="hidden sm:block w-[90%] lg:w-[40%] mt-[5vh]">
         <div className="w-[99%] flex items-center justify-between bg-white shadow-[0px_0px_4px_0px_#0000001A] rounded-[10px]">
           {options.map((opt) => {
             const isSelected = opt.key === activeTab;
@@ -109,15 +109,17 @@ export default function NotificationsFilter() {
               <div
                 key={opt.key}
                 onClick={() => handleSelect(opt.key)}
-                className="flex-1 cursor-pointer px-1"
+                className="flex-1 cursor-pointer"
               >
                 {isSelected ? (
-                  <div className="w-[94%] rounded-[10px] py-2 px-5 flex items-center justify-center bg-[#143A62]">
-                    <span className="text-[2.2vh] text-white">{opt.label}</span>
+                  <div className="w-full rounded-[10px] py-2 flex items-center justify-center bg-[#143A62]">
+                    <span className="text-[1.6vh] lg:text-[2.2vh] text-white">
+                      {opt.label}
+                    </span>
                   </div>
                 ) : (
                   <div className="w-full rounded-[10px] flex items-center justify-center bg-white">
-                    <span className="text-[2.2vh] text-[#143A62]">
+                    <span className="text-[1.6vh] lg:text-[2.2vh] text-[#143A62]">
                       {opt.label}
                     </span>
                   </div>

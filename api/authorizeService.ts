@@ -1,12 +1,9 @@
-// src/services/authorizeService.ts
+// src/api/authorizeService.ts
 
-// توکن را از localStorage می‌گیرد (بدون عبارت "Bearer ")
 const getRawToken = (): string => {
   if (typeof window !== "undefined") {
     let token = localStorage.getItem("token") || "";
-    if (token.startsWith("Bearer ")) {
-      token = token.slice(7);
-    }
+    if (token.startsWith("Bearer ")) token = token.slice(7);
     return token;
   }
   return "";
@@ -28,14 +25,22 @@ export type AuthorizeError = {
   reason: string;
 };
 
+// ⭐ نوع موفقیت – حتماً شامل reservationId باشد
+export type AuthorizeSuccess = {
+  success: true;
+  reservationId: string;
+  status: string;
+  expiresAt: string;
+  decisions: any[];
+};
+
 const AUTHORIZE_URL =
   "https://barchasb-server-admin.liara.run/orchestrator/authorize";
 
 export async function checkAuthorization(
   req: AuthorizeRequest,
-): Promise<{ success: true } | { success: false; error: AuthorizeError }> {
+): Promise<AuthorizeSuccess | { success: false; error: AuthorizeError }> {
   const token = getRawToken();
-
   const response = await fetch(AUTHORIZE_URL, {
     method: "POST",
     headers: {
@@ -45,32 +50,66 @@ export async function checkAuthorization(
     body: JSON.stringify(req),
   });
 
-  // خواندن بدنه پاسخ (حتی در صورت خطا)
   let responseBody: any = null;
   const contentType = response.headers.get("content-type");
-  if (contentType && contentType.includes("application/json")) {
+  if (contentType?.includes("application/json")) {
     responseBody = await response.json();
   } else {
     responseBody = await response.text();
   }
 
-  // موفقیت
   if (response.status === 201) {
-    return { success: true };
+    // پاسخ موفق: شامل reservationId و بقیه موارد است
+    return { success: true, ...responseBody };
   }
 
-  // محدودیت ویژه یا نردبان
   if (response.status === 409) {
     return { success: false, error: responseBody as AuthorizeError };
   }
 
-  // سایر خطاها (400، 401، 403، 500 و ...) – پیام کامل سرور را در خطا قرار بده
   const errorMessage =
     typeof responseBody === "object"
       ? JSON.stringify(responseBody)
-      : responseBody || "بدون توضیحات اضافی";
-
+      : responseBody || "بدون توضیحات";
   throw new Error(
     `Authorization failed with status ${response.status}: ${errorMessage}`,
   );
+}
+
+// ==================== چسباندن آگهی به رزرو ====================
+const ATTACH_AD_URL =
+  "https://barchasb-server-admin.liara.run/ad-action-reservation/attach-ad";
+
+export async function attachAdToReservation(
+  reservationId: string,
+  adId: string,
+): Promise<any> {
+  const token = getRawToken();
+  const response = await fetch(ATTACH_AD_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reservationId, adId }),
+  });
+
+  let responseBody: any = null;
+  const contentType = response.headers.get("content-type");
+  if (contentType?.includes("application/json")) {
+    responseBody = await response.json();
+  } else {
+    responseBody = await response.text();
+  }
+
+  if (!response.ok) {
+    const errorMessage =
+      typeof responseBody === "object"
+        ? JSON.stringify(responseBody)
+        : responseBody || "بدون توضیحات";
+    throw new Error(
+      `Attach failed with status ${response.status}: ${errorMessage}`,
+    );
+  }
+  return responseBody;
 }

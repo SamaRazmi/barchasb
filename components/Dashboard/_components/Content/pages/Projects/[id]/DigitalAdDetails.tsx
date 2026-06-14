@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
+import ReportDropdown from "@/components/common/ReportDropdown"; // مسیر را تنظیم کنید
 
 interface Props {
   id: string;
@@ -397,12 +398,18 @@ const DigitalAdDetails: React.FC<Props> = ({ id }) => {
         )}
       </div>
 
-      {/* عنوان و آیکون‌های اشتراک */}
+      {/* عنوان و آیکون‌های اشتراک + گزارش */}
       <div className="flex justify-between items-center">
         <h2 className="text-[3vh] font-bold" style={textColor}>
           {adData.title}
         </h2>
         <div className="flex gap-3">
+          <ReportDropdown
+            targetId={id}
+            reportType="DigitalAd"
+            iconSrc="/images/report_ads.svg"
+            placement="ad"
+          />
           <div
             className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
             onClick={handleCopyLink}
@@ -531,6 +538,12 @@ const DigitalAdDetails: React.FC<Props> = ({ id }) => {
         )}
       </div>
       <div className="flex justify-center gap-3">
+        <ReportDropdown
+          targetId={id}
+          reportType="DigitalAd"
+          iconSrc="/images/report_ads.svg"
+          placement="ad"
+        />
         <div
           className="w-[6vh] h-[6vh] rounded-full bg-gray-300 flex items-center justify-center cursor-pointer"
           onClick={handleCopyLink}
@@ -685,8 +698,6 @@ const DigitalAdDetails: React.FC<Props> = ({ id }) => {
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto scrollbar-hidden"
           onWheel={handleWheel}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
           style={{ userSelect: "none" }}
         >
           <MobileLayout />
