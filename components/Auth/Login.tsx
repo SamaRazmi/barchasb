@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import FormWrapper from "./_components/FormWrapperL";
 import Input from "./_components/Input";
 import Button from "./_components/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogedTrue } from "@/store/slices/logedSlice";
 import type { RootState } from "@/store/store";
-import Link from "next/link";
 import { BASE_URL } from "@/api/apiClient";
 import CaptchaModal from "./_components/CaptchaModal";
 
@@ -40,7 +40,6 @@ const Login: React.FC = () => {
     if (typeof window !== "undefined" && document.referrer) {
       try {
         const referrerUrl = new URL(document.referrer);
-        // بررسی می‌کنیم رفرر از دامین خودمان باشد و لاگین/ثبت نام نباشد
         if (
           referrerUrl.origin === window.location.origin &&
           !referrerUrl.pathname.includes("/login") &&
@@ -61,7 +60,7 @@ const Login: React.FC = () => {
     }
   }, [logedVal, router]);
 
-  // تابع اصلی لاگین – ذخیره توکن و بدون role
+  // تابع اصلی لاگین
   const performLogin = async () => {
     setLoading(true);
     try {
@@ -73,7 +72,6 @@ const Login: React.FC = () => {
       });
 
       const data = await res.json();
-      console.log("📦 پاسخ کامل سرور:", JSON.stringify(data, null, 2));
 
       if (!res.ok) {
         setModal({ success: false, message: data.message || "خطا در ورود" });
@@ -88,18 +86,13 @@ const Login: React.FC = () => {
       else if (data.data?.token) token = data.data.token;
 
       if (!token) {
-        console.error(
-          "❌ توکن در پاسخ یافت نشد! کلیدهای موجود:",
-          Object.keys(data),
-        );
+        console.error("❌ توکن در پاسخ یافت نشد!");
         setModal({ success: false, message: "خطا: توکن دریافت نشد" });
         setLoading(false);
         return false;
       }
 
       localStorage.setItem("token", token);
-      console.log("✅ توکن ذخیره شد:", token.substring(0, 20) + "...");
-
       dispatch(
         userLogedTrue({
           name: data.user?.name || "",
@@ -197,9 +190,13 @@ const Login: React.FC = () => {
       </Button>
 
       <div className="!w-[90%] max-w-[500px] flex justify-between mx-auto m-1">
-        <span className="cursor-pointer font-medium text-[15px] text-[#143A62] sm:text-[20px]">
+        {/* تغییر: لینک به صفحه forgotpassword1 */}
+        <Link
+          href="/forgotpassword1"
+          className="cursor-pointer font-medium text-[15px] text-[#143A62] sm:text-[20px]"
+        >
           فراموشی رمز عبور
-        </span>
+        </Link>
         <span className="cursor-pointer font-medium text-[15px] text-[#143A62] sm:text-[20px]">
           <Link href="/register">ثبت نام</Link>
         </span>

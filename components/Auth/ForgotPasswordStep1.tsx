@@ -142,7 +142,7 @@ const ForgotPasswordStep1: React.FC = () => {
         <Button
           onClick={handleSendCode}
           disabled={loadingSend}
-          className="bg-[#143A62] text-white whitespace-nowrap px-4 h-[42px] !w-[30%]"
+          className="bg-[#143A62] text-white whitespace-nowrap px-4 h-[42px] !text-[1.8vh] md:!text-[2.6vh] !w-[25%] md:!w-[30%]"
         >
           {loadingSend ? "در حال ارسال..." : "ارسال کد"}
         </Button>
