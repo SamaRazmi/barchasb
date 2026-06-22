@@ -15,8 +15,8 @@ import ToolsSlider from "./plugins/page";
 
 export default function Home() {
   return (
-    <div>
-      <ComingSoonOverlay targetDate="2026-5-31" />
+    <div className="overflow-x-hidden max-w-full">
+      <ComingSoonOverlay targetDate="2026-7-20" />
 
       <ScrollProgress />
       <main className="flex flex-col min-h-screen">
@@ -36,30 +36,31 @@ export default function Home() {
           <AboutBarchasb />
         </div>
 
-        <div className="sm:h-[59vh] h-auto px-6 relative overflow-hidden">
+        <div className="sm:h-[59vh] h-auto px-6 relative overflow-x-hidden">
           <BarchasbJoiner />
         </div>
 
-        <div className="sm:h-screen h-auto px-6 relative overflow-hidden">
+        <div className="sm:h-screen h-auto px-6 relative overflow-x-hidden">
           <UserStories />
         </div>
 
-        <div className="sm:h-screen h-auto px-6 relative overflow-hidden">
+        <div className="sm:h-screen h-auto px-6 relative overflow-x-hidden">
           <Projects />
         </div>
 
-        <div className="min-h-screen h-auto mb-16 px-6 relative overflowx-x-hidden">
+        <div className="min-h-screen h-auto mb-16 px-6 relative overflow-x-hidden">
           <Plans />
         </div>
 
-        <div className="md:min-h-screen  px-6 relative overflow-hidden">
+        <div className="md:min-h-screen px-6 relative overflow-x-hidden">
           <BarchasbClub />
         </div>
 
-        <div className="sm:min-h-screen h-auto px-6 relative overflow-hidden">
+        <div className="sm:min-h-screen h-auto px-6 relative overflow-x-hidden">
           <BarchasbStatus />
         </div>
-        <div className="  relative overflow-hidden">
+
+        <div className="relative overflow-x-hidden">
           <ToolsSlider />
         </div>
       </main>

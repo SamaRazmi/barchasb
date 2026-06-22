@@ -1,34 +1,27 @@
-// /api/apiJobSeeker.ts
-
-const BASE_URL = "https://barchasb-server-admin.liara.run";
+const BASE_URL = process.env.NEXT_PUBLIC_Admin_URL;
 
 export interface JobSeekerFilters {
   searchText?: string;
-  selectedTime?: string[]; // آرایه‌ای از رشته‌های "امروز", "این هفته", "این ماه", "امسال"
-  selectedCities?: string[]; // آرایه‌ای از نام شهرها
-  selectedStates?: string[]; // (جدید) آرایه‌ای از نام استان‌ها
-  hasWorkExperience?: boolean; // (جدید) سابقه کاری (true/false)
-  // فیلترهای اضافی
+  selectedTime?: string[]; // ["امروز", "این هفته", ...]
+  selectedCities?: string[];
+  selectedStates?: string[];
+  hasWorkExperience?: boolean;
   jobCategory?: string[];
   minAge?: number;
   maxAge?: number;
   gender?: "male" | "female";
   maritalStatus?: "single" | "married";
+  page?: number;
+  limit?: number;
 }
 
-/**
- * دریافت آگهی‌های کارجو با فیلترهای سمت سرور (مطابق با مستندات API)
- * @param filters فیلترهای انتخاب‌شده در فرانت‌اند
- */
-export async function fetchJobSeekerAds(filters: JobSeekerFilters) {
+export async function fetchJobSeekerAds(filters: JobSeekerFilters = {}) {
   const params = new URLSearchParams();
 
-  // 1. جستجوی متن (q)
-  if (filters.searchText) {
-    params.append("q", filters.searchText);
-  }
+  // 1. متن جستجو
+  if (filters.searchText) params.append("q", filters.searchText);
 
-  // 2. فیلتر زمانی (timeFilter)
+  // 2. فیلتر زمانی
   if (filters.selectedTime && filters.selectedTime.length > 0) {
     const timeMap: Record<string, string> = {
       امروز: "today",
@@ -36,23 +29,22 @@ export async function fetchJobSeekerAds(filters: JobSeekerFilters) {
       "این ماه": "thisMonth",
       امسال: "thisYear",
     };
-    // معمولاً کاربر فقط یک گزینه انتخاب می‌کند --> آخرین مقدار
     const lastTime = filters.selectedTime[filters.selectedTime.length - 1];
     const mappedTime = timeMap[lastTime];
     if (mappedTime) params.append("timeFilter", mappedTime);
   }
 
-  // 3. شهر (city) - چندتایی با کاما
-  if (filters.selectedCities && filters.selectedCities.length > 0) {
+  // 3. شهرها
+  if (filters.selectedCities?.length) {
     params.append("city", filters.selectedCities.join(","));
   }
 
-  // 4. استان (state) - جدید
-  if (filters.selectedStates && filters.selectedStates.length > 0) {
+  // 4. استان‌ها
+  if (filters.selectedStates?.length) {
     params.append("state", filters.selectedStates.join(","));
   }
 
-  // 5. سابقه کاری (hasWorkExperience) - جدید
+  // 5. سابقه کار
   if (filters.hasWorkExperience !== undefined) {
     params.append(
       "hasWorkExperience",
@@ -60,8 +52,8 @@ export async function fetchJobSeekerAds(filters: JobSeekerFilters) {
     );
   }
 
-  // 6. دسته‌بندی شغلی (jobCategory)
-  if (filters.jobCategory && filters.jobCategory.length > 0) {
+  // 6. دسته شغلی
+  if (filters.jobCategory?.length) {
     params.append("jobCategory", filters.jobCategory.join(","));
   }
 
@@ -74,14 +66,15 @@ export async function fetchJobSeekerAds(filters: JobSeekerFilters) {
   }
 
   // 8. جنسیت
-  if (filters.gender) {
-    params.append("gender", filters.gender);
-  }
+  if (filters.gender) params.append("gender", filters.gender);
 
   // 9. وضعیت تأهل
-  if (filters.maritalStatus) {
+  if (filters.maritalStatus)
     params.append("maritalStatus", filters.maritalStatus);
-  }
+
+  // 10. صفحه‌بندی
+  params.append("page", (filters.page ?? 1).toString());
+  params.append("limit", (filters.limit ?? 12).toString());
 
   const url = `${BASE_URL}/public/ads/job-seeker?${params.toString()}`;
   console.log("🔍 درخواست آگهی‌های کارجو:", url);
@@ -96,11 +89,36 @@ export async function fetchJobSeekerAds(filters: JobSeekerFilters) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    // در صورت نیاز، فقط آگهی‌های تأییدشده برگردانده شوند (معمولاً سمت سرور همین کار را می‌کند)
-    return (data || []).filter((item: any) => item.adStatus === "approved");
+    const result = await response.json();
+
+    // پاسخ استاندارد: { data: [], total, page, totalPages }
+    let items: any[] = [];
+
+    if (Array.isArray(result.data)) {
+      items = result.data;
+    } else if (Array.isArray(result)) {
+      items = result;
+    } else {
+      items = [];
+    }
+
+    // فقط آگهی‌های تایید شده (approved) را برگردان
+    const approvedItems = items.filter(
+      (item: any) => item.adStatus === "approved",
+    );
+
+    return {
+      data: approvedItems,
+      total: result.total ?? approvedItems.length,
+      page: result.page ?? filters.page ?? 1,
+      totalPages:
+        result.totalPages ??
+        Math.ceil(
+          (result.total ?? approvedItems.length) / (filters.limit ?? 12),
+        ),
+    };
   } catch (error) {
     console.error("❌ خطا در دریافت آگهی‌های کارجو:", error);
-    return [];
+    return { data: [], total: 0, page: 1, totalPages: 0 };
   }
 }

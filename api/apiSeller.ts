@@ -1,6 +1,4 @@
-// Client-side function to call GET /public/ads/seller - works in Next.js frontend (no 'use client' needed in this file)
-
-const BASE_URL = "https://barchasb-server-admin.liara.run";
+const BASE_URL = process.env.NEXT_PUBLIC_Admin_URL;
 
 export type TimeFilter = "today" | "thisWeek" | "thisMonth" | "thisYear";
 
@@ -12,6 +10,8 @@ export interface GetSellerAdsParams {
   timeFilter?: TimeFilter;
   state?: string | string[];
   city?: string | string[];
+  page?: number;
+  limit?: number;
 }
 
 export interface SellerAd {
@@ -22,39 +22,35 @@ export interface SellerAd {
   priceIRT: number;
   state: string;
   city: string;
-  images: string[];
-  adStatus: "approved";
+  images: {
+    url: string;
+    isMain: boolean;
+    _id: string;
+  }[];
+  adStatus?: "approved" | "pending" | "rejected";
   createdAt: string;
   owner: string;
 }
 
-/**
- * Fetch approved seller ads with advanced filters.
- * All filters are optional.
- */
+export interface SellerAdsResponse {
+  data: SellerAd[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 export async function getSellerAds(
   params: GetSellerAdsParams = {},
-): Promise<SellerAd[]> {
-  console.group("🔍 [getSellerAds] شروع درخواست");
-  console.log("1️⃣ پارامترهای ورودی (params):", JSON.stringify(params, null, 2));
-
+): Promise<SellerAdsResponse> {
   const queryParams = new URLSearchParams();
 
   const append = (key: string, value: unknown) => {
-    if (value === undefined || value === null || value === "") {
-      console.log(`   ⏭️ رد شد: ${key} =`, value);
-      return;
-    }
+    if (value === undefined || value === null || value === "") return;
+
     if (Array.isArray(value)) {
-      if (value.length === 0) {
-        console.log(`   ⏭️ رد شد (آرایه خالی): ${key} = []`);
-        return;
-      }
-      const joined = value.join(",");
-      console.log(`   ✅ افزودن پارامتر آرایه‌ای: ${key} = ${joined}`);
-      queryParams.append(key, joined);
+      if (!value.length) return;
+      queryParams.append(key, value.join(","));
     } else {
-      console.log(`   ✅ افزودن پارامتر: ${key} = ${String(value)}`);
       queryParams.append(key, String(value));
     }
   };
@@ -67,53 +63,44 @@ export async function getSellerAds(
   append("state", params.state);
   append("city", params.city);
 
-  const queryString = queryParams.toString();
-  const url = `${BASE_URL}/public/ads/seller${queryString ? `?${queryString}` : ""}`;
-  console.log("2️⃣ آدرس نهایی (URL):", url);
-  console.log("3️⃣ متد درخواست: GET");
-  console.log("4️⃣ هدرهای ارسالی: { Accept: 'application/json' }");
+  append("page", params.page ?? 1);
+  append("limit", params.limit ?? 12);
 
-  console.time("⏱️ زمان درخواست");
+  const url = `${BASE_URL}/public/ads/seller?${queryParams.toString()}`;
+
   const response = await fetch(url, {
     method: "GET",
     headers: {
       Accept: "application/json",
     },
   });
-  console.timeEnd("⏱️ زمان درخواست");
-
-  console.log("5️⃣ وضعیت پاسخ (status):", response.status, response.statusText);
-  console.log("6️⃣ هدرهای پاسخ (مهم):", {
-    "content-type": response.headers.get("content-type"),
-    "content-length": response.headers.get("content-length"),
-  });
 
   if (!response.ok) {
     let errorMessage = `API error: ${response.status}`;
     try {
-      const errorBody = await response.json();
-      errorMessage = errorBody.message || errorMessage;
-      console.error("❌ بدنه خطا (error body):", errorBody);
-    } catch {
-      console.error("❌ Unable to parse error body as JSON");
-    }
-    console.groupEnd();
+      const err = await response.json();
+      errorMessage = err.message || errorMessage;
+    } catch {}
     throw new Error(errorMessage);
   }
 
-  const data = await response.json();
-  console.log(
-    "7️⃣ نوع داده برگشتی:",
-    Array.isArray(data) ? "آرایه" : typeof data,
-  );
-  console.log(
-    "8️⃣ نمونه خروجی (حداکثر 3 آیتم اول):",
-    Array.isArray(data) ? data.slice(0, 3) : data,
-  );
-  console.log(
-    `9️⃣ تعداد کل آیتم‌ها: ${Array.isArray(data) ? data.length : "N/A"}`,
-  );
+  const result = await response.json();
 
-  console.groupEnd();
-  return data;
+  const rawData: SellerAd[] = Array.isArray(result)
+    ? result
+    : (result.data ?? []);
+
+  const safeData = rawData.filter((item) => {
+    if ("adStatus" in item && item.adStatus) {
+      return item.adStatus === "approved";
+    }
+    return true;
+  });
+
+  return {
+    data: safeData,
+    total: result.total ?? safeData.length,
+    page: result.page ?? params.page ?? 1,
+    totalPages: result.totalPages ?? 1,
+  };
 }

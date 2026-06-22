@@ -1,52 +1,41 @@
-// /api/apiEmployer.ts
+const BASE_URL = process.env.NEXT_PUBLIC_Admin_URL;
 
-const BASE_URL = "https://barchasb-server-admin.liara.run";
-
-/**
- * دریافت آگهی‌های کارفرما با فیلترهای سمت سرور
- * @param filters فیلترهای انتخاب‌شده در فرانت‌اند (منطبق با کامپوننت Karfarma)
- */
 export async function fetchEmployerAds(filters: {
   searchText?: string | null;
   selectedCategory?: string[];
-  selectedTypeWork?: string[]; // تغییر: آرایه‌ای از رشته‌ها (چندتا قابل انتخاب)
+  selectedTypeWork?: string[];
   selectedCities?: string[];
   selectedTime?: string | null;
+  page?: number;
+  limit?: number;
 }) {
   const params = new URLSearchParams();
 
-  // 1. جستجوی متن (q)
-  if (filters.searchText) {
-    params.append("q", filters.searchText);
-  }
+  // 1. متن جستجو
+  if (filters.searchText) params.append("q", filters.searchText);
 
-  // 2. دسته‌بندی شغلی (jobCategory) - چندتایی با کاما
-  if (filters.selectedCategory && filters.selectedCategory.length > 0) {
+  // 2. دسته بندی شغلی (چندتایی)
+  if (filters.selectedCategory?.length) {
     params.append("jobCategory", filters.selectedCategory.join(","));
   }
 
-  // 3. نوع همکاری (cooperationType) - چندتایی با کاما (پشتیبانی از همه ترکیب‌ها)
-  if (filters.selectedTypeWork && filters.selectedTypeWork.length > 0) {
+  // 3. نوع همکاری (تبدیل فارسی به انگلیسی)
+  if (filters.selectedTypeWork?.length) {
     const typeMap: Record<string, string> = {
       "تمام وقت": "full_time",
       "پاره وقت": "part_time",
       دورکاری: "remote",
       کارآموزی: "internship",
-      // "پروژه": "project",   // در صورت نیاز
     };
-    // تبدیل هر گزینه فارسی به مقدار انگلیسی و حذف موارد نامعتبر
     const englishTypes = filters.selectedTypeWork
       .map((label) => typeMap[label])
-      .filter(Boolean); // رشته‌های معتبر را نگه می‌دارد
-
-    if (englishTypes.length > 0) {
+      .filter(Boolean);
+    if (englishTypes.length) {
       params.append("cooperationType", englishTypes.join(","));
     }
-    // توجه: پارامتر isRemote اینجا استفاده نمی‌شود چون فیلتر جداگانه‌ای است.
-    // اگر بعداً نیاز به «فقط دورکاری» داشتید، یک فیلتر جدا به اسم isRemote: boolean اضافه کنید.
   }
 
-  // 4. فیلتر زمانی (timeFilter)
+  // 4. فیلتر زمانی
   if (filters.selectedTime) {
     const timeMap: Record<string, string> = {
       امروز: "today",
@@ -58,13 +47,17 @@ export async function fetchEmployerAds(filters: {
     if (mappedTime) params.append("timeFilter", mappedTime);
   }
 
-  // 5. شهر (city) - چندتایی با کاما
-  if (filters.selectedCities && filters.selectedCities.length > 0) {
+  // 5. شهرها
+  if (filters.selectedCities?.length) {
     params.append("city", filters.selectedCities.join(","));
   }
 
+  // 6. صفحه‌بندی
+  params.append("page", (filters.page ?? 1).toString());
+  params.append("limit", (filters.limit ?? 12).toString());
+
   const url = `${BASE_URL}/public/ads/employer?${params.toString()}`;
-  console.log("🔍 درخواست ارسال شد به:", url);
+  console.log("🔍 درخواست آگهی‌های کارفرما:", url);
 
   try {
     const response = await fetch(url, {
@@ -76,11 +69,36 @@ export async function fetchEmployerAds(filters: {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    // فقط آگهی‌های تأییدشده برگردانده شوند
-    return (data || []).filter((item: any) => item.adStatus === "approved");
+    const result = await response.json();
+
+    // پاسخ استاندارد: { data: [], total, page, totalPages }
+    let items: any[] = [];
+
+    if (Array.isArray(result.data)) {
+      items = result.data;
+    } else if (Array.isArray(result)) {
+      items = result;
+    } else {
+      items = [];
+    }
+
+    // فقط آگهی‌های تایید شده (approved) را برگردان
+    const approvedItems = items.filter(
+      (item: any) => item.adStatus === "approved",
+    );
+
+    return {
+      data: approvedItems,
+      total: result.total ?? approvedItems.length,
+      page: result.page ?? filters.page ?? 1,
+      totalPages:
+        result.totalPages ??
+        Math.ceil(
+          (result.total ?? approvedItems.length) / (filters.limit ?? 12),
+        ),
+    };
   } catch (error) {
     console.error("❌ خطا در دریافت آگهی‌های کارفرما:", error);
-    return [];
+    return { data: [], total: 0, page: 1, totalPages: 0 };
   }
 }

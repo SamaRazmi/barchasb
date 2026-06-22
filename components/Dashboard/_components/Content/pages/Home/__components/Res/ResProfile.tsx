@@ -95,7 +95,7 @@ const ResProfile = () => {
 
   return (
     <div
-      className="w-full h-[10vh] rounded-[16px] flex items-center px-4 sm:h-[12vh] md:h-[80px] lg:h-[90px]"
+      className="w-full h-[10%] md:hidden rounded-[16px] flex items-center px-4"
       style={{ background: "#FFFFFF33" }}
     >
       <button
