@@ -317,7 +317,7 @@ const ResContentHome: React.FC<ResContentHomeProps> = ({
 
   // ======================= نمایش =======================
   return (
-    <div className="flex flex-col h-full md:hidden mx-1">
+    <div className="flex flex-col h-[98%] md:hidden mx-1">
       {isLoggedIn && !isChatRoute && (
         <>
           <ResTopBar setDrawerOption={handleDrawerClick} />

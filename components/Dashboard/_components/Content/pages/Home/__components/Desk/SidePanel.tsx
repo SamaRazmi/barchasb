@@ -19,12 +19,28 @@ function SidePanelContent() {
 
   const fetchAds = async () => {
     setLoading(true);
+
     try {
-      const res = await getSellerAds({});
-      const approvedAds = res.filter(
+      let allData: any[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+
+      do {
+        const res = await getSellerAds({
+          page: currentPage,
+          limit: 12,
+        });
+
+        allData.push(...(res.data || []));
+
+        totalPages = res.totalPages || 1;
+        currentPage++;
+      } while (currentPage <= totalPages);
+
+      const approvedAds = allData.filter(
         (item: any) => item.adStatus === "approved",
       );
-      console.log("✅ تعداد آگهی‌های تأیید شده:", approvedAds.length);
+
       setAllAds(approvedAds);
     } catch (error) {
       console.error("❌ خطا در دریافت:", error);

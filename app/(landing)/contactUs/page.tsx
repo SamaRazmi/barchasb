@@ -138,8 +138,15 @@ const ContactPage: React.FC = () => {
               <div className="flex gap-2">
                 <p className="font-medium text-[#143A62]">آدرس :</p>
                 <p className="text-gray-600">
-                  شیراز ، بلوار آزادگان ، کارخانه نوآوری
+                  کارخانه نوآوری شیراز، طبقه سوم، دفتر A4+
                 </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-xl">📍</span>
+              <div className="flex gap-2">
+                <p className="font-medium text-[#143A62]">کد پستی:</p>
+                <p className="text-gray-600">7154815728</p>
               </div>
             </div>
 
@@ -148,7 +155,7 @@ const ContactPage: React.FC = () => {
               <span className="text-xl">☎️</span>
               <div className="flex gap-2">
                 <p className="font-medium text-[#143A62]">شماره ثابت :</p>
-                <p className="text-gray-600">0219994545</p>
+                <p className="text-gray-600">02191090737</p>
               </div>
             </div>
 

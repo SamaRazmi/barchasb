@@ -4,9 +4,9 @@ import animatePlugin from "tailwindcss-animate";
 const config: Config = {
   darkMode: ["class"],
   content: [
-    "./app/**/*.{ts,tsx,js,jsx}", // اضافه کردن js,jsx برای پشتیبانی از کامپوننت‌های رزومه
-    "./components/**/*.{ts,tsx,js,jsx}", // اضافه کردن js,jsx
-    "./src/**/*.{ts,tsx,js,jsx}", // مسیر src (اگر فایل‌های رزومه در src قرار دارند)
+    "./app/**/*.{ts,tsx,js,jsx}",
+    "./components/**/*.{ts,tsx,js,jsx}",
+    "./src/**/*.{ts,tsx,js,jsx}",
   ],
   theme: {
     extend: {
@@ -57,12 +57,21 @@ const config: Config = {
           5: "hsl(var(--chart-5))",
         },
       },
-      // اضافات مورد نیاز برای کلاس‌های سفارشی فرم رزومه
       spacing: {
-        "35": "35px", // برای px-35
+        "35": "35px",
       },
       maxWidth: {
-        "8xl": "88rem", // برای max-w-8xl (مقدار اختیاری)
+        "8xl": "88rem",
+      },
+      // ========== اضافه کردن انیمیشن موج ==========
+      keyframes: {
+        wave: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "100%": { backgroundPosition: "200% 50%" },
+        },
+      },
+      animation: {
+        wave: "wave 1.2s linear infinite",
       },
     },
   },
