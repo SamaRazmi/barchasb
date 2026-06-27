@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+
 import {
   Drawer,
   Box,
@@ -22,20 +24,22 @@ interface MenuItem {
   title: string;
   subItems: string[];
   icon: string;
+  href?: string;
 }
 
 const menuItems: MenuItem[] = [
-  { title: "خانه", subItems: [], icon: "/images/home_res.png" },
-  { title: "درباره ما", subItems: [], icon: "/images/about_res.png" },
+  { title: "خانه", subItems: [], icon: "/images/home_res.png", href: "/" },
   {
-    title: "استخدام کارجو",
-    subItems: ["زیرمنو 1", "زیرمنو 2"],
-    icon: "/images/employ_res.png",
+    title: "درباره ما",
+    subItems: [],
+    icon: "/images/about_res.png",
+    href: "/about-us",
   },
   {
-    title: "پیدا کردن کار",
-    subItems: ["زیرمنو 1", "زیرمنو 2"],
-    icon: "/images/work_res.png",
+    title: "برچسب کلاب",
+    subItems: [],
+    icon: "/images/club-menu1.svg",
+    href: "/club",
   },
 ];
 
@@ -93,94 +97,61 @@ const DrawerRes: React.FC<DrawerResProps> = ({ open, onClose }) => {
           const bgColor = item.title === "خانه" ? "#FFFFFF26" : "#FFFFFF0D";
           const hasSubItems = item.subItems.length > 0;
 
+          const content = (
+            <AccordionSummary
+              expandIcon={
+                hasSubItems && (
+                  <ArrowBackIosNewIcon
+                    sx={{
+                      color: "#fff",
+                      width: 12,
+                      height: 12,
+                      minWidth: 12,
+                    }}
+                  />
+                )
+              }
+              sx={{
+                minHeight: "40px",
+                px: 1,
+                backgroundColor: bgColor,
+                borderRadius: "5px",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Image
+                  src={item.icon}
+                  width={23}
+                  height={23}
+                  alt={item.title}
+                />
+                <Typography
+                  sx={{ fontSize: "16px", fontWeight: 600, color: "#fff" }}
+                >
+                  {item.title}
+                </Typography>
+              </Box>
+            </AccordionSummary>
+          );
+
           return (
             <Accordion
               key={item.title}
               expanded={expanded === item.title}
               onChange={hasSubItems ? handleChange(item.title) : undefined}
               disableGutters
-              sx={{
-                backgroundColor: "transparent",
-                boxShadow: "none",
-                borderRadius: "5px",
-              }}
+              sx={{ backgroundColor: "transparent", boxShadow: "none" }}
             >
-              <AccordionSummary
-                expandIcon={
-                  hasSubItems && (
-                    <ArrowBackIosNewIcon
-                      sx={{
-                        color: "#fff",
-                        width: 12,
-                        height: 12,
-                        minWidth: 12,
-                        transition: "transform 0.2s",
-                        ".MuiAccordionSummary-expandIconWrapper.Mui-expanded &":
-                          {
-                            transform: "rotate(90deg)",
-                          },
-                      }}
-                    />
-                  )
-                }
-                sx={{
-                  minHeight: "40px",
-                  px: 1,
-                  backgroundColor: bgColor,
-                  "&:hover": { backgroundColor: bgColor },
-                  borderRadius: "5px",
-                  "&.Mui-expanded": {
-                    borderBottomLeftRadius: 0,
-                    borderBottomRightRadius: 0,
-                  },
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Image
-                    src={item.icon}
-                    width={23}
-                    height={23}
-                    alt={item.title}
-                  />
-                  <Typography
-                    sx={{ fontSize: "16px", fontWeight: 600, color: "#fff" }}
-                  >
-                    {item.title}
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-
-              {hasSubItems && (
-                <AccordionDetails
-                  sx={{
-                    p: 1,
-                    backgroundColor: bgColor,
-                    borderBottomLeftRadius: "5px",
-                    borderBottomRightRadius: "5px",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                  }}
+              {item.href && !hasSubItems ? (
+                <Link
+                  href={item.href}
+                  onClick={onClose}
+                  style={{ textDecoration: "none" }}
                 >
-                  {item.subItems.map((sub, i) => (
-                    <Box
-                      key={i}
-                      sx={{
-                        backgroundColor: "#0000001A",
-                        borderRadius:
-                          i === item.subItems.length - 1 ? "5px" : 0,
-                        px: 1,
-                        height: "40px",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Typography sx={{ fontSize: "14px", color: "#fff" }}>
-                        {sub}
-                      </Typography>
-                    </Box>
-                  ))}
-                </AccordionDetails>
+                  {content}
+                </Link>
+              ) : (
+                content
               )}
             </Accordion>
           );

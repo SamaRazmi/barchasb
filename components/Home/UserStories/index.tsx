@@ -3,7 +3,7 @@ import UserCards from "./_components/UserStories";
 
 const UserStorySection = () => {
   return (
-    <section className="flex h-[102vh] flex-col justify-start bg-[#143A6205] relative my-[5vh] rounded-[20px]">
+    <section className="flex min-h-[100vh] flex-col justify-start bg-[#143A6205] relative my-[5vh] rounded-[20px]">
       {/* تصویر پس‌زمینه */}
       <div
         className="absolute top-0 left-0 -z-10 w-[500px] h-[500px]"

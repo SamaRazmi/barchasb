@@ -5,6 +5,7 @@ import { Button } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import DrawerRes from "./DrawerRes";
+import Link from "next/link";
 
 // 🔥 اضافه شده
 import { useDispatch, useSelector } from "react-redux";
@@ -33,7 +34,7 @@ const MobileHeader: React.FC<HeaderProps> = ({ className }) => {
           {
             method: "GET",
             credentials: "include",
-          }
+          },
         );
 
         const data = await res.json();
@@ -43,7 +44,7 @@ const MobileHeader: React.FC<HeaderProps> = ({ className }) => {
             userLogedTrue({
               name: data.user.name || "",
               lastName: data.user.lastName || "",
-            })
+            }),
           );
           dispatch(setRole(data.user.role));
         }
@@ -59,11 +60,43 @@ const MobileHeader: React.FC<HeaderProps> = ({ className }) => {
   const handleLogin = () => router.push("/login");
   const handleHamburger = () => setDrawerOpen(true);
   const handleCloseDrawer = () => setDrawerOpen(false);
+  const bannerItems = [
+    {
+      text: "بیا برچسب کلاب ، بازی کن ، امتیاز بگیر ، پولش کن",
+      href: "/club",
+      icon: "/images/banerClub.svg",
+    },
+    {
+      text: "آموزش گام‌به‌گام؛ با برچسب حرفه‌ای شو",
+      href: "/education",
+      icon: "/images/banerrSchool.svg",
+    },
+    {
+      text: "تنوع بی‌پایان؛ در برچسب‌شاپ همه چی هست",
+      href: "/shop",
+      icon: "/images/banerShop.svg",
+    },
+    {
+      text: "ثبت سریع آگهی و هزاران فرصت شغلی در انتظار توست",
+      href: "/dashboard",
+      icon: "/images/banerAd.svg",
+    },
+  ];
+
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % bannerItems.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
       <nav
-        className={`${className} flex items-center justify-between w-full px-4 py-2 bg-white rtl md:hidden`}
+        className={`${className} flex items-center justify-between w-full px-2 py-2 bg-white rtl md:hidden`}
         style={{ boxShadow: "0px 0px 4px 0px #0000001A" }}
       >
         {/* لوگو گوشه سمت راست */}
@@ -75,6 +108,23 @@ const MobileHeader: React.FC<HeaderProps> = ({ className }) => {
             style={{ objectFit: "contain" }}
           />
         </div>
+        {/* بنر چرخشی */}
+        <Link
+          href={bannerItems[activeIndex].href}
+          className="flex items-center justify-between px-2 py-2 rounded-lg transition-all duration-500 bg-gradient-to-r from-[#143A62] to-[#00B6FF]"
+          style={{ textDecoration: "none" }}
+        >
+          <span className="text-white  font-medium  text-[1.5vh]">
+            {bannerItems[activeIndex].text}
+          </span>
+
+          <Image
+            src={bannerItems[activeIndex].icon}
+            alt="icon"
+            width={25}
+            height={25}
+          />
+        </Link>
 
         {/* سمت چپ: منوی همبرگر و دکمه‌ها */}
         <div className="flex items-center gap-4">
@@ -87,13 +137,13 @@ const MobileHeader: React.FC<HeaderProps> = ({ className }) => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "20px",
+                fontSize: "18px",
                 fontWeight: 500,
                 textTransform: "none",
                 minWidth: "unset",
                 padding: 0,
                 color: "#143A62",
-                lineHeight: "47px",
+                lineHeight: "40px",
               }}
             >
               ثبت نام
@@ -107,13 +157,13 @@ const MobileHeader: React.FC<HeaderProps> = ({ className }) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "20px",
+              fontSize: "18px",
               fontWeight: 500,
               textTransform: "none",
               minWidth: "unset",
               padding: 0,
               color: "#143A62",
-              lineHeight: "47px",
+              lineHeight: "40px",
             }}
           >
             ورود

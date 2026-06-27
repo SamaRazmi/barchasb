@@ -40,7 +40,7 @@ export default function Home() {
           <BarchasbJoiner />
         </div>
 
-        <div className="sm:h-screen h-auto px-6 relative overflow-x-hidden">
+        <div className=" h-auto px-6 relative overflow-x-hidden">
           <UserStories />
         </div>
 
@@ -60,7 +60,7 @@ export default function Home() {
           <BarchasbStatus />
         </div>
 
-        <div className="relative overflow-x-hidden">
+        <div className="relative overflow-x-hidden ">
           <ToolsSlider />
         </div>
       </main>

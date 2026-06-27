@@ -8,7 +8,7 @@ export const metadata = {
   title: "برچسب | استخدام فریلنسر",
   description: "یک سایت حرفه‌ای برای استخدام و فریلنسرها",
   icons: {
-    icon: " logo.png",
+    icon: "images/logoTitle.png",
   },
 };
 

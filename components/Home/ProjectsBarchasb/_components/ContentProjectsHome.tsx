@@ -46,7 +46,7 @@ const ContentProjectsHome = () => {
         <div className="absolute top-[calc(50%+3vh)] right-2 text-[#143A62] text-[2.6vh]">
           آگهی ها
         </div>
-        <div className="absolute top-[calc(50%+3vh)] left-[calc(50%-22vh)] text-[#143A62] text-[2.6vh]">
+        <div className="absolute top-[calc(50%+3vh)] left-[calc(50%-26vh)] text-[#143A62] text-[2.6vh]">
           آگهی های مناقصه ای{" "}
         </div>
 

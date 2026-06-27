@@ -82,7 +82,7 @@ export default function FooterMobile() {
             <FooterTitle title="سوشال مدیا" />
 
             <div className="mt-4 flex flex-col gap-5">
-              <div>
+              {/* <div>
                 <Image
                   src="/images/logo_footer.png"
                   alt="Logo"
@@ -90,7 +90,7 @@ export default function FooterMobile() {
                   height={40}
                   className="object-contain"
                 />
-              </div>
+              </div> */}
 
               <div className="flex gap-3">
                 <Link

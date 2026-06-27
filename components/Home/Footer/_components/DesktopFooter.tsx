@@ -64,7 +64,7 @@ export default function FooterDesktop() {
                   </Link>
                 ))}
               </div>
-              <div>
+              {/* <div>
                 <Image
                   src="/images/logo_footer.png"
                   alt="Logo"
@@ -72,7 +72,7 @@ export default function FooterDesktop() {
                   height={60}
                   style={{ objectFit: "contain" }}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 

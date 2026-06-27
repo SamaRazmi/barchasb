@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 type Tool = {
   id: number;
   title: string;
+  description: string;
   dark: boolean;
   link: string;
 };
@@ -19,39 +20,61 @@ const tools: Tool[] = [
   {
     id: 1,
     title: " رزومه ساز ",
+    description: "ساخت رزومه حرفه‌ای در چند دقیقه",
     dark: true,
     link: "/dashboard/plugins/resume",
   },
-  { id: 2, title: " آزمون ها ", dark: false, link: "/dashboard/plugins/tests" },
+  {
+    id: 2,
+    title: " آزمون ها ",
+    description: "ارزیابی مهارت‌ها با آزمون‌های تخصصی",
+    dark: false,
+    link: "/dashboard/plugins/tests",
+  },
   {
     id: 3,
     title: " تبدیل ها ",
+    description: "ابزارهای کاربردی برای تبدیل فرمت‌ها",
     dark: true,
     link: "/dashboard/plugins/converter",
   },
 ];
+
 const ToolCard = ({ tool, onClick }: { tool: Tool; onClick: () => void }) => (
   <div
     onClick={onClick}
-    className={`flex items-center justify-end gap-5 transition-all duration-300 cursor-pointer
-    shadow-sm hover:shadow-lg hover:-translate-y-1 hover:scale-105 
-    px-4 py-2 md:px-5 md:py-3
-    rounded-[20px] border-[1.5px] 
-    min-w-[140px] md:min-w-[160px]
+    className={`flex flex-col gap-1 cursor-pointer
+    transition-all duration-300
+    shadow-sm hover:shadow-lg hover:-translate-y-1
+    px-4 py-3 md:px-5 md:py-4
+    rounded-[20px] border-[1.5px]
+    min-w-[150px]
     ${
       tool.dark
         ? "bg-[#143A62] border-[#143A62] text-white"
         : "bg-white border-[#143A62] text-[#143A62]"
     }`}
   >
-    <span className="text-[12px] md:text-base font-bold whitespace-nowrap">
-      {tool.title}
-    </span>
-    <div
-      className={`w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 transition-transform duration-300 ${
-        tool.dark ? "bg-white" : "bg-[#143A62]"
+    <div className="flex items-center justify-end gap-4">
+      <span className="text-[13px] md:text-base font-bold whitespace-nowrap">
+        {tool.title}
+      </span>
+
+      <div
+        className={`w-8 h-8 md:w-9 md:h-9 rounded-full shrink-0 ${
+          tool.dark ? "bg-white" : "bg-[#143A62]"
+        }`}
+      />
+    </div>
+
+    {/* توضیح کوچک */}
+    <p
+      className={`text-[11px] leading-relaxed ${
+        tool.dark ? "text-white/70" : "text-[#143A62]/70"
       }`}
-    ></div>
+    >
+      {tool.description}
+    </p>
   </div>
 );
 
