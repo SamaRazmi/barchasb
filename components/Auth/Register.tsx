@@ -14,7 +14,7 @@ import DatePicker, { DateObject } from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
 import TermsAgreementModal from "./_components/TermsAgreementModal";
-import { useProvinces, useCities } from "@/api/apiClient";
+import { useProvinces, useCities, useRegister } from "@/api/authApi";
 import { useDispatch } from "react-redux";
 import { userLogedTrue } from "@/store/slices/logedSlice";
 
@@ -103,6 +103,7 @@ const Register: React.FC = () => {
   const captchaWidth = 300;
   const { data: provincesData, isLoading: provincesLoading } = useProvinces();
   const { data: citiesData } = useCities(selectedProvince);
+  const registerMutation = useRegister();
 
   useEffect(() => {
     if (citiesData) {
@@ -142,54 +143,40 @@ const Register: React.FC = () => {
         ...rest,
         birthDate: values.userBirthDate,
       };
-      const response = await fetch(
-        "https://barchasb-server.liara.run/api/auth/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(valuesToSend),
-        },
-      );
-      const data = await response.json();
-      console.log("📦 پاسخ سرور ثبت‌نام:", data);
+      const data = await registerMutation.mutateAsync(valuesToSend);
 
-      if (response.ok) {
-        let token = null;
-        if (data.token) token = data.token;
-        else if (data.accessToken) token = data.accessToken;
-        else if (data.access_token) token = data.access_token;
+      let token = null;
+      if (data.token) token = data.token;
+      else if (data.accessToken) token = data.accessToken;
+      else if (data.access_token) token = data.access_token;
 
-        if (token) {
-          localStorage.setItem("token", token);
-          dispatch(
-            userLogedTrue({
-              name: values.name,
-              lastName: values.lastName,
-            }),
-          );
-          setModal({
-            message: "ثبت نام موفق! در حال انتقال به داشبورد...",
-            success: true,
-          });
-          setTimeout(() => router.push("/dashboard"), 1000);
-        } else {
-          setModal({
-            message: "ثبت نام موفق! لطفاً وارد شوید.",
-            success: true,
-          });
-          helpers.resetForm();
-          setTimeout(() => router.push("/login"), 1000);
-        }
+      if (token) {
+        localStorage.setItem("token", token);
+        dispatch(
+          userLogedTrue({
+            name: values.name,
+            lastName: values.lastName,
+          }),
+        );
+        setModal({
+          message: "ثبت نام موفق! در حال انتقال به داشبورد...",
+          success: true,
+        });
+        setTimeout(() => router.push("/dashboard"), 1000);
       } else {
         setModal({
-          message: data.message || "خطا در ثبت نام",
-          success: false,
+          message: "ثبت نام موفق! لطفاً وارد شوید.",
+          success: true,
         });
+        helpers.resetForm();
+        setTimeout(() => router.push("/login"), 1000);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setModal({ message: "خطای شبکه", success: false });
+      setModal({
+        message: error.message || "خطا در ثبت نام",
+        success: false,
+      });
     } finally {
       helpers.setSubmitting(false);
       setTimeout(() => {
@@ -552,9 +539,11 @@ const Register: React.FC = () => {
                 <Button
                   type="submit"
                   className="w-full h-[6svh] sm:h-[7vh]"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || registerMutation.isPending}
                 >
-                  {isSubmitting ? "در حال ارسال..." : "ثبت نام"}
+                  {isSubmitting || registerMutation.isPending
+                    ? "در حال ارسال..."
+                    : "ثبت نام"}
                 </Button>
               </div>
             </div>

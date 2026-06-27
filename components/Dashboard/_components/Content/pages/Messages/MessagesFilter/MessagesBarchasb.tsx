@@ -3,27 +3,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   fetchInAppNotifications,
-  InAppNotification,
   markNotificationAsRead,
-} from "@/api/apiNotifications";
-import { getDevices, markSessionAsRead } from "@/api/apiDevices";
-
-interface DeviceSession {
-  id: string;
-  deviceInfo?: {
-    deviceType: string;
-    browser: string;
-    ip: string;
-    userAgent?: string;
-  };
-  deviceType?: string;
-  browser?: string;
-  ip?: string;
-  lastActiveAt: string;
-  createdAt: string;
-  isActive: boolean;
-  isRead?: boolean;
-}
+  getDevices,
+  markSessionAsRead,
+  InAppNotification,
+  DeviceSession,
+} from "@/api/apiMessages";
 
 interface GroupedDevice {
   key: string;
@@ -32,7 +17,7 @@ interface GroupedDevice {
   ip: string;
   lastActiveAt: string;
   sessionIds: string[];
-  hasUnread: boolean; // اضافه شد: آیا حداقل یک جلسه در این گروه خوانده نشده است؟
+  hasUnread: boolean;
 }
 
 export default function MessagesBarchasb() {
@@ -181,6 +166,29 @@ export default function MessagesBarchasb() {
     });
   };
 
+  // کامپوننت فلش (chevron) با چرخش
+  const Chevron = ({ expanded }: { expanded: boolean }) => (
+    <span
+      className={`inline-block transition-transform duration-200 ${
+        expanded ? "rotate-180" : ""
+      }`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </span>
+  );
+
   const DeviceCard = ({ device }: { device: GroupedDevice }) => {
     const isExpanded = expandedDeviceKey === device.key;
     // رنگ دایره: اگر hasUnread == true -> قرمز (نخوانده)، در غیر این صورت سبز (خوانده شده)
@@ -197,9 +205,12 @@ export default function MessagesBarchasb() {
               {device.deviceType} - {device.browser}
             </h3>
           </div>
-          <span
-            className={`inline-block w-2.5 h-2.5 rounded-full ${dotColorClass}`}
-          ></span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-block w-2.5 h-2.5 rounded-full ${dotColorClass}`}
+            ></span>
+            <Chevron expanded={isExpanded} />
+          </div>
         </div>
 
         {isExpanded && (
@@ -233,11 +244,14 @@ export default function MessagesBarchasb() {
               {notif.title}
             </h3>
           </div>
-          <span
-            className={`inline-block w-2.5 h-2.5 rounded-full ${
-              notif.isRead ? "bg-green-500" : "bg-red-500"
-            }`}
-          ></span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-block w-2.5 h-2.5 rounded-full ${
+                notif.isRead ? "bg-green-500" : "bg-red-500"
+              }`}
+            ></span>
+            <Chevron expanded={isExpanded} />
+          </div>
         </div>
 
         {isExpanded && (

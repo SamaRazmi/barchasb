@@ -7,15 +7,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import ReportDropdown from "@/components/common/ReportDropdown";
+import { fetchSellerAd, fetchUserById } from "@/api/apiAdsDetails";
+import { sellerStatusMap, translate } from "@/constants/translations";
 
 interface Props {
   id: string;
 }
 
-const BASE_URL = "https://barchasb-server.liara.run/api";
-
 const maskPhone = (phone?: string) =>
-  phone ? phone.replace(/.(?=.{4})/g, "*") : "";
+  phone ? phone.slice(0, -4) + "****" : "";
 
 const maskPhoneLast4 = (phone?: string) => {
   if (!phone) return "";
@@ -64,6 +64,11 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
 
   const fetchOwnerPhone = async () => {
     if (!user) {
+      toast.warn("لطفاً ابتدا وارد حساب کاربری خود شوید", {
+        position: "bottom-right",
+        autoClose: 3000,
+        onClick: () => router.push("/login"),
+      });
       return;
     }
 
@@ -75,12 +80,8 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
 
     setFetchingPhone(true);
     try {
-      const res = await fetch(`${BASE_URL}/get-one-user/${ownerId}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`خطا: ${res.status}`);
-      const response = await res.json();
-      const phoneNumber = response.data?.phone || "";
+      const userData = await fetchUserById(ownerId);
+      const phoneNumber = userData?.phone || "";
       if (!phoneNumber) {
         toast.error("شماره تماسی برای این آگهی‌دهنده ثبت نشده است");
         return;
@@ -196,20 +197,19 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
   }, []);
 
   useEffect(() => {
-    const fetchAd = async () => {
+    const loadAd = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/ads/seller/${id}`);
-        if (!res.ok) throw new Error("خطا در دریافت آگهی");
-        const data = await res.json();
+        const data = await fetchSellerAd(id);
         setAdData(data);
         setActiveImage(0);
       } catch (err: any) {
         console.error(err);
+        toast.error("خطا در دریافت آگهی");
       } finally {
         setLoading(false);
       }
     };
-    fetchAd();
+    loadAd();
   }, [id]);
 
   useEffect(() => {
@@ -222,6 +222,53 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
   if (!adData) return null;
 
   const textColor = { color: "#143A62" };
+
+  // ========== تابع پردازش وضعیت ==========
+  const getStatusDisplay = () => {
+    const raw = adData.status;
+
+    // اگر مقدار وجود نداشت
+    if (raw === undefined || raw === null || raw === "") {
+      return "وضعیت مشخص نشده";
+    }
+
+    let statusValue = raw;
+
+    // اگر آرایه بود، اولین عضو را بگیر
+    if (Array.isArray(statusValue)) {
+      statusValue = statusValue[0];
+    }
+
+    // اگر رشته با کاما بود، اولی را جدا کن
+    if (typeof statusValue === "string" && statusValue.includes(",")) {
+      statusValue = statusValue.split(",")[0];
+    }
+
+    // اگر آبجکت بود، به رشته تبدیل کن (فقط برای ایمنی)
+    if (typeof statusValue === "object") {
+      statusValue = String(statusValue);
+    }
+
+    // اگر مقدار نهایی رشته بود، ترجمه کن
+    if (typeof statusValue === "string") {
+      const trimmed = statusValue.trim();
+      const translated = translate(trimmed, sellerStatusMap);
+      // اگر ترجمه پیدا شد، برگردان، در غیر این صورت خود مقدار اصلی
+      return translated || trimmed;
+    }
+
+    // در غیر این صورت، مقدار را به عنوان رشته نشان بده
+    return String(statusValue) || "وضعیت مشخص نشده";
+  };
+
+  // ========== تابع نمایش معاوضه ==========
+  const getNegotiableDisplay = () => {
+    // اگر isNegotiable وجود داشته باشد و true باشد، "معاوضه می‌کنم" در غیر این صورت "خیر"
+    if (adData.isNegotiable === true || adData.isNegotiable === "true") {
+      return "معاوضه می‌کنم";
+    }
+    return "خیر";
+  };
 
   // ========== محتوای دسکتاپ ==========
   const DesktopLayout = () => (
@@ -259,14 +306,14 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
           <div className="flex justify-between items-center">
             <span style={textColor}>وضعیت:</span>
             <span className="font-bold" style={textColor}>
-              {adData.status || "وضعیت مشخص نشده"}
+              {getStatusDisplay()}
             </span>
           </div>
           <div className="w-full h-[0.2vh] bg-gradient-to-r from-transparent via-[#143A62]/80 to-transparent"></div>
           <div className="flex justify-between items-center">
-            <span style={textColor}>مایل به معاوضه:</span>
+            <span style={textColor}>معاوضه:</span>
             <span className="font-bold" style={textColor}>
-              {adData.isNegotiable ? "بلی" : "خیر"}
+              {getNegotiableDisplay()}
             </span>
           </div>
           <div className="w-full h-[0.2vh] bg-gradient-to-r from-transparent via-[#143A62]/80 to-transparent"></div>
@@ -363,14 +410,14 @@ const SellerAdDetails: React.FC<Props> = ({ id }) => {
         <div className="flex justify-between items-center">
           <span style={textColor}>وضعیت:</span>
           <span className="font-bold" style={textColor}>
-            {adData.status || "وضعیت مشخص نشده"}
+            {getStatusDisplay()}
           </span>
         </div>
         <div className="w-full h-[0.2vh] bg-gradient-to-r from-transparent via-[#143A62]/80 to-transparent"></div>
         <div className="flex justify-between items-center">
-          <span style={textColor}>مایل به معاوضه:</span>
+          <span style={textColor}>معاوضه:</span>
           <span className="font-bold" style={textColor}>
-            {adData.isNegotiable ? "بلی" : "خیر"}
+            {getNegotiableDisplay()}
           </span>
         </div>
         <div className="w-full h-[0.2vh] bg-gradient-to-r from-transparent via-[#143A62]/80 to-transparent"></div>

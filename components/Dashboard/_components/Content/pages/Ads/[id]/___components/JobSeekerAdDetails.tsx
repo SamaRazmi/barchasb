@@ -7,20 +7,18 @@ import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import ReportDropdown from "@/components/common/ReportDropdown";
+import { fetchJobSeekerAd, fetchUserById } from "@/api/apiAdsDetails";
+import {
+  genderMap,
+  maritalStatusMap,
+  militaryStatusMap,
+  skillMap,
+  translate,
+} from "@/constants/translations";
+
 interface Props {
   id: string;
 }
-
-const BASE_URL = "https://barchasb-server.liara.run/api";
-
-// ✅ اصلاح: ۴ رقم آخر ستاره می‌شود
-const maskPhone = (phone?: string) =>
-  phone ? phone.slice(0, -4) + "****" : "";
-
-const maskPhoneLast4 = (phone?: string) => {
-  if (!phone) return "";
-  return phone.slice(0, -4) + "****";
-};
 
 const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
   const [adData, setAdData] = useState<any>(null);
@@ -82,12 +80,8 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
 
     setFetchingPhone(true);
     try {
-      const res = await fetch(`${BASE_URL}/get-one-user/${ownerId}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`خطا: ${res.status}`);
-      const response = await res.json();
-      const phoneNumber = response.data?.phone || "";
+      const userData = await fetchUserById(ownerId);
+      const phoneNumber = userData?.phone || "";
       if (!phoneNumber) {
         toast.error("شماره تماسی برای این آگهی‌دهنده ثبت نشده است");
         return;
@@ -195,20 +189,19 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
   }, []);
 
   useEffect(() => {
-    const fetchAd = async () => {
+    const loadAd = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/ads/jobseeker/${id}`);
-        if (!res.ok) throw new Error("خطا در دریافت آگهی");
-        const data = await res.json();
+        const data = await fetchJobSeekerAd(id);
         setAdData(data);
         setActiveImage(0);
       } catch (err: any) {
         console.error(err);
+        toast.error("خطا در دریافت آگهی");
       } finally {
         setLoading(false);
       }
     };
-    fetchAd();
+    loadAd();
   }, [id]);
 
   // فوکوس خودکار برای دسکتاپ
@@ -275,7 +268,8 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
             className="bg-gray-200 px-3 py-1 rounded-full w-fit"
             style={textColor}
           >
-            <span className="font-bold">تاهل:</span> {adData.maritalStatus}
+            <span className="font-bold">تاهل:</span>{" "}
+            {translate(adData.maritalStatus, maritalStatusMap)}
           </div>
         )}
         {adData.gender && (
@@ -283,7 +277,8 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
             className="bg-gray-200 px-3 py-1 rounded-full w-fit"
             style={textColor}
           >
-            <span className="font-bold">جنسیت:</span> {adData.gender}
+            <span className="font-bold">جنسیت:</span>{" "}
+            {translate(adData.gender, genderMap)}
           </div>
         )}
         {adData.gender === "male" && adData.militaryStatus && (
@@ -291,7 +286,8 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
             className="bg-gray-200 px-3 py-1 rounded-full w-fit"
             style={textColor}
           >
-            <span className="font-bold">سربازی:</span> {adData.militaryStatus}
+            <span className="font-bold">سربازی:</span>{" "}
+            {translate(adData.militaryStatus, militaryStatusMap)}
           </div>
         )}
         {user && adData.phoneNumber && (
@@ -314,9 +310,10 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
           <div className="mt-1 flex flex-wrap gap-4" style={textColor}>
             {adData.skills.map((skill: string, idx: number) => {
               const [key, value] = skill.split(":");
+              const displayName = value || key;
               return (
                 <span key={idx}>
-                  <span>• {value || key}</span>
+                  <span>• {translate(displayName, skillMap)}</span>
                 </span>
               );
             })}
@@ -434,7 +431,8 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
             className="bg-gray-200 px-3 py-1 rounded-full w-fit"
             style={textColor}
           >
-            <span className="font-bold">تاهل:</span> {adData.maritalStatus}
+            <span className="font-bold">تاهل:</span>{" "}
+            {translate(adData.maritalStatus, maritalStatusMap)}
           </div>
         )}
         {adData.gender && (
@@ -442,7 +440,8 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
             className="bg-gray-200 px-3 py-1 rounded-full w-fit"
             style={textColor}
           >
-            <span className="font-bold">جنسیت:</span> {adData.gender}
+            <span className="font-bold">جنسیت:</span>{" "}
+            {translate(adData.gender, genderMap)}
           </div>
         )}
         {adData.gender === "male" && adData.militaryStatus && (
@@ -450,7 +449,8 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
             className="bg-gray-200 px-3 py-1 rounded-full w-fit"
             style={textColor}
           >
-            <span className="font-bold">سربازی:</span> {adData.militaryStatus}
+            <span className="font-bold">سربازی:</span>{" "}
+            {translate(adData.militaryStatus, militaryStatusMap)}
           </div>
         )}
         {user && adData.phoneNumber && (
@@ -473,9 +473,10 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
           <div className="mt-1 flex flex-wrap gap-4" style={textColor}>
             {adData.skills.map((skill: string, idx: number) => {
               const [key, value] = skill.split(":");
+              const displayName = value || key;
               return (
                 <span key={idx}>
-                  <span>• {value || key}</span>
+                  <span>• {translate(displayName, skillMap)}</span>
                 </span>
               );
             })}
@@ -517,7 +518,6 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
     <div className="flex flex-col md:flex-row md:justify-between items-center gap-4 mt-4 pt-2 border-t border-gray-200">
       <div className="flex justify-center gap-3">
         {!user ? (
-          // حالت لاگین نبودن: هر دو دکمه نمایش داده می‌شوند و به /login هدایت می‌کنند
           <>
             <button
               onClick={() => router.push("/login")}
@@ -533,7 +533,6 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
             </button>
           </>
         ) : (
-          // حالت لاگین بودن: رفتار قبلی (چت فقط در صورت عدم مالکیت، اطلاعات تماس همیشه)
           <>
             {user._id !== adData.owner?._id && (
               <button
@@ -742,6 +741,15 @@ const JobSeekerAdDetails: React.FC<Props> = ({ id }) => {
       `}</style>
     </div>
   );
+};
+
+// ========== توابع کمکی ماسک کردن شماره ==========
+const maskPhone = (phone?: string) =>
+  phone ? phone.slice(0, -4) + "****" : "";
+
+const maskPhoneLast4 = (phone?: string) => {
+  if (!phone) return "";
+  return phone.slice(0, -4) + "****";
 };
 
 export default JobSeekerAdDetails;

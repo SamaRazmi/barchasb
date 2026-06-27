@@ -7,8 +7,16 @@ import { useUser } from "@/context/UserContext";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import ChatMessagesContent from "../../Chat/[adType]/[adId]/[receiverId]/ChatMessagesContent";
 import MessagesBarchasb from "./MessagesBarchasb";
-import { fetchInAppNotifications } from "@/api/apiNotifications";
-import { getDevices } from "@/api/apiDevices";
+import {
+  API_BASE_URL,
+  fetchConversations,
+  fetchUnreadCounts,
+  fetchUnreadDetails,
+  markConversationAsRead,
+  fetchInAppNotifications,
+  getDevices,
+  Conversation,
+} from "@/api/apiMessages";
 
 type OptionKey = "barchasb" | "karjo" | "karfarma" | "agahi";
 
@@ -18,19 +26,6 @@ const options: { key: OptionKey; label: string }[] = [
   { key: "karfarma", label: "کارفرما" },
   { key: "agahi", label: "آگهی" },
 ];
-
-interface Conversation {
-  _id: string;
-  participants: { _id: string; name: string }[];
-  adId: string;
-  adType: string;
-  lastMessage: string;
-  adImage?: string;
-  adTitle?: string;
-  unreadCount?: number;
-}
-
-const BASE_URL = "https://barchasb-server.liara.run/api";
 
 export default function MessagesFilter() {
   const { activeTab, setActiveTab } = useSkills();
@@ -94,18 +89,13 @@ export default function MessagesFilter() {
   const refreshOtherCounts = useCallback(async () => {
     if (!user?._id) return;
     try {
-      const res = await fetch(`${BASE_URL}/chat/unread-count/${user._id}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          karjo: data.data.karjo ?? 0,
-          karfarma: data.data.karfarma ?? 0,
-          agahi: data.data.agahi ?? 0,
-        }));
-      }
+      const counts = await fetchUnreadCounts(user._id);
+      setUnreadCounts((prev) => ({
+        ...prev,
+        karjo: counts.karjo ?? 0,
+        karfarma: counts.karfarma ?? 0,
+        agahi: counts.agahi ?? 0,
+      }));
     } catch (err) {
       console.error("Error fetching unread chat counts:", err);
     }
@@ -114,18 +104,13 @@ export default function MessagesFilter() {
   const refreshUnreadDetails = useCallback(async () => {
     if (!user?._id || !conversations.length) return;
     try {
-      const res = await fetch(`${BASE_URL}/chat/unread-details/${user._id}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setConversations((prev) =>
-          prev.map((conv) => ({
-            ...conv,
-            unreadCount: data.data[conv._id] || 0,
-          })),
-        );
-      }
+      const details = await fetchUnreadDetails(user._id);
+      setConversations((prev) =>
+        prev.map((conv) => ({
+          ...conv,
+          unreadCount: details[conv._id] || 0,
+        })),
+      );
     } catch (err) {
       console.error("Error fetching unread details:", err);
     }
@@ -166,16 +151,13 @@ export default function MessagesFilter() {
     setLoading(true);
     const fetchConversationsFast = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/chat/conversations/${user._id}`, {
-          credentials: "include",
-        });
-        const data = await res.json();
+        const data = await fetchConversations(user._id);
         if (!data.success) {
           setConversations([]);
           setLoading(false);
           return;
         }
-        const convs: Conversation[] = data.conversations || [];
+        const convs = data.conversations || [];
         setConversations(convs);
         setLoading(false);
         // دریافت تصاویر و عنوان‌ها در پس‌زمینه
@@ -184,11 +166,11 @@ export default function MessagesFilter() {
             if (!conv.adId) return conv;
             let url = "";
             if (conv.adType === "EmployerAd")
-              url = `${BASE_URL}/ads/employer/${conv.adId}`;
+              url = `${API_BASE_URL}/ads/employer/${conv.adId}`;
             else if (conv.adType === "JobSeekerAd")
-              url = `${BASE_URL}/ads/jobseeker/${conv.adId}`;
+              url = `${API_BASE_URL}/ads/jobseeker/${conv.adId}`;
             else if (conv.adType === "SellerAd")
-              url = `${BASE_URL}/ads/seller/${conv.adId}`;
+              url = `${API_BASE_URL}/ads/seller/${conv.adId}`;
             else return conv;
             try {
               const res = await fetch(url, { credentials: "include" });
@@ -219,11 +201,11 @@ export default function MessagesFilter() {
                 ) {
                   conv.adImage = mainUrl.url.startsWith("http")
                     ? mainUrl.url
-                    : `${BASE_URL}/${mainUrl.url}`;
+                    : `${API_BASE_URL}/${mainUrl.url}`;
                 } else if (typeof mainUrl === "string") {
                   conv.adImage = mainUrl.startsWith("http")
                     ? mainUrl
-                    : `${BASE_URL}/${mainUrl}`;
+                    : `${API_BASE_URL}/${mainUrl}`;
                 }
               }
             } catch (err) {
@@ -243,14 +225,28 @@ export default function MessagesFilter() {
     fetchConversationsFast();
   }, [user?._id, refreshUnreadDetails]);
 
-  const handleConversationClick = (conv: Conversation) => {
+  const handleConversationClick = async (conv: Conversation) => {
     const otherUser = conv.participants.find((p) => p._id !== user?._id);
     if (!otherUser) return;
+
     if (conv.unreadCount && conv.unreadCount > 0) {
-      setConversations((prev) =>
-        prev.map((c) => (c._id === conv._id ? { ...c, unreadCount: 0 } : c)),
-      );
+      try {
+        // ارسال درخواست به سرور برای علامت‌گذاری
+        await markConversationAsRead(user?._id || "", conv._id);
+
+        // به‌روزرسانی لوکال
+        setConversations((prev) =>
+          prev.map((c) => (c._id === conv._id ? { ...c, unreadCount: 0 } : c)),
+        );
+
+        // دریافت مجدد اعداد از سرور برای آپدیت شدن تب‌ها
+        await refreshOtherCounts();
+        await refreshUnreadDetails();
+      } catch (err) {
+        console.error("Error marking conversation as read:", err);
+      }
     }
+
     router.push(`/dashboard/chat/${conv.adType}/${conv.adId}/${otherUser._id}`);
   };
 
@@ -370,7 +366,7 @@ export default function MessagesFilter() {
       {/* حالت دسکتاپ */}
       <div className="hidden sm:block w-full h-full">
         <div className="w-full flex flex-col items-right lg:items-center h-full">
-          <div className="w-full lg:w-[80%] pr-1 py-1 rounded-t-[10px] mt-[4vh] flex-shrink-0">
+          <div className="w-full lg:w-[90%] pr-1 py-1 rounded-t-[10px] mt-[4vh] flex-shrink-0">
             <div className="w-fit-content bg-white shadow-[0px_0px_4px_0px_#0000001A] rounded-[10px] flex items-center relative">
               {options.map((opt) => {
                 const isSelected = opt.key === activeTab;
@@ -425,7 +421,7 @@ export default function MessagesFilter() {
           {/* کانتینر اسکرول دسکتاپ - بدون نوار اسکرول و با قابلیت اسکرول با ماوس، کیبورد و درگ */}
           <div
             ref={desktopContainerRef}
-            className="w-full mt-3 flex flex-col items-center flex-1 min-h-0 overflow-y-auto hide-scrollbar"
+            className="w-[94%] mt-3 flex flex-col items-center flex-1 min-h-0 overflow-y-auto hide-scrollbar"
             onMouseDown={activeTab !== "barchasb" ? handleMouseDown : undefined}
           >
             {!loading && (

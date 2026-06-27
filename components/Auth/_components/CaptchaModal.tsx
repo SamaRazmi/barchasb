@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { FormikHelpers } from "formik";
 import { RegisterFormValues } from "../Register";
+import { useSendOtp, useVerifyOtp } from "@/api/authApi";
 
 interface CaptchaModalProps {
   handleCaptchaConfirm: (
@@ -49,7 +50,9 @@ const CaptchaModal: React.FC<CaptchaModalProps> = ({
   const [messageType, setMessageType] = useState<"error" | "success" | "info">(
     "info",
   );
-  const [sending, setSending] = useState(false);
+
+  const sendOtpMutation = useSendOtp();
+  const verifyOtpMutation = useVerifyOtp();
 
   const sendSms = async () => {
     if (!values.phone || values.phone.toString().length < 10) {
@@ -59,24 +62,10 @@ const CaptchaModal: React.FC<CaptchaModalProps> = ({
     }
 
     try {
-      setSending(true);
       setMessage("در حال ارسال کد...");
       setMessageType("info");
 
-      const res = await fetch(
-        "https://barchasb-server.liara.run/api/otp/send",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: values.phone.toString() }),
-        },
-      );
-
-      const data = await res.json();
-
-      if (!res.ok || data?.success === false) {
-        throw new Error(data?.msg || "خطا در ارسال کد");
-      }
+      await sendOtpMutation.mutateAsync({ phone: values.phone.toString() });
 
       setMessage("کد پیامک ارسال شد ✅");
       setMessageType("success");
@@ -84,8 +73,6 @@ const CaptchaModal: React.FC<CaptchaModalProps> = ({
       console.error(e);
       setMessage(e.message || "ارسال کد موفق نبود");
       setMessageType("error");
-    } finally {
-      setSending(false);
     }
   };
 
@@ -104,23 +91,10 @@ const CaptchaModal: React.FC<CaptchaModalProps> = ({
         return;
       }
 
-      const res = await fetch(
-        "https://barchasb-server.liara.run/api/otp/verify",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            phone: values.phone.toString(),
-            code: smsCode,
-          }),
-        },
-      );
-
-      const data = await res.json();
-
-      if (!data?.success) {
-        throw new Error(data?.msg || "کد اشتباه است");
-      }
+      await verifyOtpMutation.mutateAsync({
+        phone: values.phone.toString(),
+        code: smsCode,
+      });
 
       setCaptchaVerified(true);
       handleCaptchaConfirm(values, helpers);
@@ -183,7 +157,7 @@ const CaptchaModal: React.FC<CaptchaModalProps> = ({
         <input
           value={captchaInput}
           onChange={(e) => {
-            const val = e.target.value.replace(/\D/g, ""); // فقط عدد
+            const val = e.target.value.replace(/\D/g, "");
             setCaptchaInput(val);
           }}
           placeholder="عدد کپچا"

@@ -7,15 +7,21 @@ import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import ReportDropdown from "@/components/common/ReportDropdown";
+import { fetchEmployerAd, fetchUserById } from "@/api/apiAdsDetails";
+import {
+  cooperationTypeMap,
+  experienceMap,
+  genderMap,
+  militaryStatusMap,
+  translate,
+} from "@/constants/translations";
 
 interface Props {
   id: string;
 }
 
-const BASE_URL = "https://barchasb-server.liara.run/api";
-
 const maskPhone = (phone?: string) =>
-  phone ? phone.replace(/.(?=.{4})/g, "*") : "";
+  phone ? phone.slice(0, -4) + "****" : "";
 
 const maskPhoneLast4 = (phone?: string) => {
   if (!phone) return "";
@@ -81,12 +87,8 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
 
     setFetchingPhone(true);
     try {
-      const res = await fetch(`${BASE_URL}/get-one-user/${ownerId}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`خطا: ${res.status}`);
-      const response = await res.json();
-      const phoneNumber = response.data?.phone || "";
+      const userData = await fetchUserById(ownerId);
+      const phoneNumber = userData?.phone || "";
       if (!phoneNumber) {
         toast.error("شماره تماسی برای این آگهی‌دهنده ثبت نشده است");
         return;
@@ -192,20 +194,19 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
   }, []);
 
   useEffect(() => {
-    const fetchAd = async () => {
+    const loadAd = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/ads/employer/${id}`);
-        if (!res.ok) throw new Error("خطا در دریافت آگهی");
-        const data = await res.json();
+        const data = await fetchEmployerAd(id);
         setAdData(data);
         setActiveImage(0);
       } catch (err: any) {
         console.error(err);
+        toast.error("خطا در دریافت آگهی");
       } finally {
         setLoading(false);
       }
     };
-    fetchAd();
+    loadAd();
   }, [id]);
 
   useEffect(() => {
@@ -273,7 +274,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
             style={textColor}
           >
             <span className="font-bold">نوع همکاری:</span>{" "}
-            {adData.cooperationType}
+            {translate(adData.cooperationType, cooperationTypeMap)}
           </div>
         )}
         {adData.experience && (
@@ -282,7 +283,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
             style={textColor}
           >
             <span className="font-bold">حداقل سابقه کار:</span>{" "}
-            {adData.experience}
+            {translate(adData.experience, experienceMap)}
           </div>
         )}
         {(adData.minSalary || adData.maxSalary) && (
@@ -294,6 +295,27 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
             {adData.maxSalary}
           </div>
         )}
+        {adData.gender && (
+          <div
+            className="bg-gray-200 px-3 py-1 rounded w-fit"
+            style={textColor}
+          >
+            <span className="font-bold">جنسیت:</span>{" "}
+            {translate(adData.gender, genderMap)}
+          </div>
+        )}
+        {/* ✅ شرط جدید: فقط برای جنسیت مرد و در صورتی که militaryStatus معنی‌دار باشد */}
+        {adData.gender === "male" &&
+          adData.militaryStatus &&
+          adData.militaryStatus !== "none" && (
+            <div
+              className="bg-gray-200 px-3 py-1 rounded w-fit"
+              style={textColor}
+            >
+              <span className="font-bold">وضعیت سربازی:</span>{" "}
+              {translate(adData.militaryStatus, militaryStatusMap)}
+            </div>
+          )}
       </div>
 
       {adData.benefits && (
@@ -377,7 +399,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
         )}
       </div>
 
-      {/* ردیف عنوان + آیکون‌ها (ترتیب: گزارش اول) */}
+      {/* ردیف عنوان + آیکون‌ها */}
       <div className="flex justify-between items-center">
         <h2 className="text-[3vh] font-bold" style={textColor}>
           {adData.name}
@@ -434,7 +456,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
             style={textColor}
           >
             <span className="font-bold">نوع همکاری:</span>{" "}
-            {adData.cooperationType}
+            {translate(adData.cooperationType, cooperationTypeMap)}
           </div>
         )}
         {adData.experience && (
@@ -443,7 +465,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
             style={textColor}
           >
             <span className="font-bold">حداقل سابقه کار:</span>{" "}
-            {adData.experience}
+            {translate(adData.experience, experienceMap)}
           </div>
         )}
         {(adData.minSalary || adData.maxSalary) && (
@@ -455,6 +477,27 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
             {adData.maxSalary}
           </div>
         )}
+        {adData.gender && (
+          <div
+            className="bg-gray-200 px-3 py-1 rounded-full w-fit"
+            style={textColor}
+          >
+            <span className="font-bold">جنسیت:</span>{" "}
+            {translate(adData.gender, genderMap)}
+          </div>
+        )}
+        {/* ✅ شرط جدید: فقط برای جنسیت مرد و در صورتی که militaryStatus معنی‌دار باشد */}
+        {adData.gender === "male" &&
+          adData.militaryStatus &&
+          adData.militaryStatus !== "none" && (
+            <div
+              className="bg-gray-200 px-3 py-1 rounded-full w-fit"
+              style={textColor}
+            >
+              <span className="font-bold">وضعیت سربازی:</span>{" "}
+              {translate(adData.militaryStatus, militaryStatusMap)}
+            </div>
+          )}
       </div>
 
       {adData.benefits && (
@@ -686,6 +729,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
 
   return (
     <div className="relative p-4 md:p-8 bg-gray-50 text-right h-[78vh] text-[2vh] flex flex-col">
+      {/* دسکتاپ */}
       <div className="hidden md:flex flex-col h-full">
         <div
           ref={scrollContainerRef}
@@ -702,6 +746,7 @@ const EmployerAdDetails: React.FC<Props> = ({ id }) => {
         <DesktopFooter />
       </div>
 
+      {/* موبایل */}
       <div className="block md:hidden flex flex-col h-full">
         <div
           ref={scrollContainerRef}

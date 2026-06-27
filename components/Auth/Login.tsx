@@ -9,7 +9,7 @@ import Button from "./_components/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { userLogedTrue } from "@/store/slices/logedSlice";
 import type { RootState } from "@/store/store";
-import { BASE_URL } from "@/api/apiClient";
+import { useLogin } from "@/api/authApi";
 import CaptchaModal from "./_components/CaptchaModal";
 
 interface ModalState {
@@ -28,12 +28,13 @@ const Login: React.FC = () => {
 
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [captchaModalOpen, setCaptchaModalOpen] = useState(false);
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [errors, setErrors] = useState({ phone: "", password: "" });
   const [previousPath, setPreviousPath] = useState("/");
+
+  const loginMutation = useLogin();
 
   // گرفتن مسیر قبلی از referrer در اولین رندر
   useEffect(() => {
@@ -62,22 +63,8 @@ const Login: React.FC = () => {
 
   // تابع اصلی لاگین
   const performLogin = async () => {
-    setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ phone, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setModal({ success: false, message: data.message || "خطا در ورود" });
-        setLoading(false);
-        return false;
-      }
+      const data = await loginMutation.mutateAsync({ phone, password });
 
       let token = null;
       if (data.token) token = data.token;
@@ -88,7 +75,6 @@ const Login: React.FC = () => {
       if (!token) {
         console.error("❌ توکن در پاسخ یافت نشد!");
         setModal({ success: false, message: "خطا: توکن دریافت نشد" });
-        setLoading(false);
         return false;
       }
 
@@ -103,12 +89,13 @@ const Login: React.FC = () => {
       setModal({ success: true, message: "ورود موفق ✅" });
       router.push("/dashboard");
       return true;
-    } catch (err) {
-      console.error("❌ خطای شبکه:", err);
-      setModal({ success: false, message: "خطا در اتصال به سرور" });
+    } catch (err: any) {
+      console.error("❌ خطای ورود:", err);
+      setModal({
+        success: false,
+        message: err.message || "خطا در اتصال به سرور",
+      });
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -184,13 +171,12 @@ const Login: React.FC = () => {
       <Button
         className="mb-2 !w-[90%] mx-auto"
         onClick={handleLoginClick}
-        disabled={loading}
+        disabled={loginMutation.isPending}
       >
-        {loading ? "در حال ورود..." : "ورود"}
+        {loginMutation.isPending ? "در حال ورود..." : "ورود"}
       </Button>
 
       <div className="!w-[90%] max-w-[500px] flex justify-between mx-auto m-1">
-        {/* تغییر: لینک به صفحه forgotpassword1 */}
         <Link
           href="/forgotpassword1"
           className="cursor-pointer font-medium text-[15px] text-[#143A62] sm:text-[20px]"

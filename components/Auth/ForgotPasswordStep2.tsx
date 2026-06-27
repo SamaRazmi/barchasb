@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Input from "./_components/Input";
 import FormWrapper from "./_components/FormWrapperL";
 import Button from "./_components/Button";
-import { BASE_URL } from "@/api/apiClient";
+import { useResetPassword } from "@/api/authApi";
 import Link from "next/link";
+
 interface ModalState {
   message: string;
   success: boolean;
@@ -16,12 +17,13 @@ const ForgotPasswordStep2: React.FC = () => {
   const router = useRouter();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [errors, setErrors] = useState({
     newPassword: "",
     confirmPassword: "",
   });
+
+  const resetPasswordMutation = useResetPassword();
 
   // بررسی وجود resetToken در sessionStorage
   useEffect(() => {
@@ -71,20 +73,11 @@ const ForgotPasswordStep2: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          resetToken,
-          newPassword: newPassword.trim(),
-        }),
+      await resetPasswordMutation.mutateAsync({
+        resetToken,
+        newPassword: newPassword.trim(),
       });
-      const data = await res.json();
-      if (!res.ok || data?.success === false) {
-        throw new Error(data?.msg || "خطا در تغییر رمز عبور");
-      }
       sessionStorage.removeItem("resetToken");
       setModal({ success: true, message: "رمز عبور با موفقیت تغییر کرد ✅" });
       setTimeout(() => router.push("/login"), 2000);
@@ -94,16 +87,11 @@ const ForgotPasswordStep2: React.FC = () => {
         success: false,
         message: err.message || "خطا در ارتباط با سرور",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <FormWrapper
-      backLinkDesktop="/"
-      backLinkMobile="/forgotpassword1"
-    >
+    <FormWrapper backLinkDesktop="/" backLinkMobile="/forgotpassword1">
       <h2 className="text-[30px] font-bold mb-6 text-[#143A62] text-center">
         تغییر رمز عبور
       </h2>
@@ -141,9 +129,9 @@ const ForgotPasswordStep2: React.FC = () => {
       <Button
         className="mb-4 !w-[90%] mx-auto"
         onClick={handleResetPassword}
-        disabled={loading}
+        disabled={resetPasswordMutation.isPending}
       >
-        {loading ? "در حال تغییر رمز..." : "تایید"}
+        {resetPasswordMutation.isPending ? "در حال تغییر رمز..." : "تایید"}
       </Button>
       <div className="!w-[90%] max-w-[500px] flex justify-start mx-auto mt-2">
         <Link

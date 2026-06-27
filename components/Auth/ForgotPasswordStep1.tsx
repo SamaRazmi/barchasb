@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { BASE_URL } from "@/api/apiClient";
 import Input from "./_components/Input";
 import FormWrapper from "./_components/FormWrapperL";
 import Button from "./_components/Button";
+import { useSendOtp, useVerifyOtp } from "@/api/authApi";
 
 interface ModalState {
   message: string;
@@ -17,10 +17,11 @@ const ForgotPasswordStep1: React.FC = () => {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
-  const [loadingSend, setLoadingSend] = useState(false);
-  const [loadingVerify, setLoadingVerify] = useState(false);
   const [modal, setModal] = useState<ModalState | null>(null);
   const [errors, setErrors] = useState({ phone: "", code: "" });
+
+  const sendOtpMutation = useSendOtp();
+  const verifyOtpMutation = useVerifyOtp();
 
   useEffect(() => {
     if (modal) {
@@ -39,20 +40,14 @@ const ForgotPasswordStep1: React.FC = () => {
       return;
     }
     setErrors((prev) => ({ ...prev, phone: "" }));
-    setLoadingSend(true);
+
     try {
-      const res = await fetch(`${BASE_URL}/otp/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim(), purpose: "reset" }),
+      await sendOtpMutation.mutateAsync({
+        phone: phone.trim(),
+        purpose: "reset",
       });
-      const data = await res.json();
-      if (!res.ok || data?.success === false) {
-        throw new Error(data?.msg || "خطا در ارسال کد");
-      }
       setModal({ success: true, message: "کد تایید ارسال شد ✅" });
     } catch (err: any) {
-      // اگر خطا مربوط به "یافت نشد" باشد فقط مدال نمایش داده شود (بدون لاگ کنسول)
       if (err.message?.includes("یافت نشد")) {
         setModal({ success: false, message: err.message });
       } else {
@@ -62,8 +57,6 @@ const ForgotPasswordStep1: React.FC = () => {
           message: err.message || "ارسال کد موفق نبود",
         });
       }
-    } finally {
-      setLoadingSend(false);
     }
   };
 
@@ -77,22 +70,13 @@ const ForgotPasswordStep1: React.FC = () => {
       return;
     }
     setErrors((prev) => ({ ...prev, code: "" }));
-    setLoadingVerify(true);
-    try {
-      const res = await fetch(`${BASE_URL}/otp/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: phone.trim(),
-          code: code.trim(),
-          purpose: "reset",
-        }),
-      });
-      const data = await res.json();
 
-      if (!res.ok || data?.success === false || data?.error) {
-        throw new Error(data?.msg || data?.message || "کد اشتباه است");
-      }
+    try {
+      const data = await verifyOtpMutation.mutateAsync({
+        phone: phone.trim(),
+        code: code.trim(),
+        purpose: "reset",
+      });
 
       if (data.resetToken) {
         sessionStorage.setItem("resetToken", data.resetToken);
@@ -102,7 +86,6 @@ const ForgotPasswordStep1: React.FC = () => {
 
       router.push("/forgotpassword2");
     } catch (err: any) {
-      // اگر خطا مربوط به "یافت نشد" باشد فقط مدال نمایش داده شود (بدون لاگ کنسول)
       if (err.message?.includes("یافت نشد")) {
         setModal({ success: false, message: err.message });
       } else {
@@ -112,8 +95,6 @@ const ForgotPasswordStep1: React.FC = () => {
           message: err.message || "تایید کد موفق نبود",
         });
       }
-    } finally {
-      setLoadingVerify(false);
     }
   };
 
@@ -141,10 +122,10 @@ const ForgotPasswordStep1: React.FC = () => {
         </div>
         <Button
           onClick={handleSendCode}
-          disabled={loadingSend}
+          disabled={sendOtpMutation.isPending}
           className="bg-[#143A62] text-white whitespace-nowrap px-4 h-[42px] !text-[1.8vh] md:!text-[2.6vh] !w-[25%] md:!w-[30%]"
         >
-          {loadingSend ? "در حال ارسال..." : "ارسال کد"}
+          {sendOtpMutation.isPending ? "در حال ارسال..." : "ارسال کد"}
         </Button>
       </div>
 
@@ -166,9 +147,9 @@ const ForgotPasswordStep1: React.FC = () => {
       <Button
         className="mb-4 !w-[90%] mx-auto"
         onClick={handleVerifyCode}
-        disabled={loadingVerify}
+        disabled={verifyOtpMutation.isPending}
       >
-        {loadingVerify ? "در حال تایید..." : "تایید"}
+        {verifyOtpMutation.isPending ? "در حال تایید..." : "تایید"}
       </Button>
 
       <div className="!w-[90%] max-w-[500px] flex justify-start mx-auto mt-2">

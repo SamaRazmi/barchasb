@@ -6,6 +6,12 @@ import { io, Socket } from "socket.io-client";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import ReportDropdown from "@/components/common/ReportDropdown";
+import {
+  getAdDetails,
+  getChatHistory,
+  sendMessage,
+  markRead,
+} from "@/api/apiChat";
 
 interface Message {
   senderId: string;
@@ -22,8 +28,10 @@ interface ChatMessagesContentProps {
   adTitle?: string;
 }
 
-const BASE_URL = "https://barchasb-server.liara.run/api";
-const SOCKET_URL = "https://barchasb-server.liara.run";
+// خواندن آدرس سوکت از متغیر محیطی (با پشتیبان)
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/api$/, "") ||
+  "https://barchasb-server.liara.run";
 
 const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
   currentUserId,
@@ -55,21 +63,7 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
     }
     if (!adId || !adType) return;
 
-    let url = "";
-    if (adType === "SellerAd") url = `${BASE_URL}/ads/seller/${adId}`;
-    else if (adType === "EmployerAd") url = `${BASE_URL}/ads/employer/${adId}`;
-    else if (adType === "JobSeekerAd")
-      url = `${BASE_URL}/ads/jobseeker/${adId}`;
-
-    fetch(url, { credentials: "include" })
-      .then((res) => {
-        if (!res.ok) {
-          console.warn(`Failed to fetch ad: ${res.status} ${res.statusText}`);
-          setAdFetchError(true);
-          return null;
-        }
-        return res.json();
-      })
+    getAdDetails(adId, adType)
       .then((data) => {
         if (data && (data.title || data.name)) {
           const title = data.title || data.name || "";
@@ -90,11 +84,7 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
   useEffect(() => {
     if (!currentUserId || !receiverId || !adId || !adType) return;
 
-    fetch(
-      `${BASE_URL}/chat/history/${adType}/${adId}/${currentUserId}/${receiverId}`,
-      { credentials: "include" },
-    )
-      .then((res) => res.json())
+    getChatHistory(adType, adId, currentUserId, receiverId)
       .then(async (data) => {
         if (data.success) {
           const msgs = data.messages
@@ -125,23 +115,9 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
             const convId = data.messages[0].conversationId;
             setConversationId(convId);
             try {
-              const markRes = await fetch(`${BASE_URL}/chat/mark-read`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  userId: currentUserId,
-                  conversationId: convId,
-                }),
-              });
-              const contentType = markRes.headers.get("content-type");
-              if (markRes.ok && contentType?.includes("application/json")) {
-                const markData = await markRes.json();
-                if (markData.success) {
-                  window.dispatchEvent(new CustomEvent("refreshUnreadCounts"));
-                }
-              } else {
-                console.warn("Mark-read API returned non-JSON response");
+              const markData = await markRead(currentUserId, convId);
+              if (markData && markData.success) {
+                window.dispatchEvent(new CustomEvent("refreshUnreadCounts"));
               }
             } catch (err) {
               console.error("Error marking messages as read:", err);
@@ -158,7 +134,7 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
     }
   };
 
-  // اتصال سوکت
+  // اتصال سوکت با استفاده از SOCKET_URL برگرفته از env
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -241,20 +217,9 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
     setInputMessage("");
 
     socketRef.current?.emit("sendMessage", socketMessage);
-
-    fetch(`${BASE_URL}/chat/send`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        from: currentUserId,
-        to: receiverId,
-        adId,
-        adType,
-        content: inputMessage,
-        type: "text",
-      }),
-    }).catch(console.error);
+    sendMessage(currentUserId, receiverId, adId, adType, inputMessage).catch(
+      console.error,
+    );
   };
 
   const handleTyping = (text: string) => {
@@ -289,12 +254,10 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden rounded-xl shadow-lg">
-      {/* TopBar دسکتاپ */}
       <div className="hidden md:block my-[1vh] bg-white ">
         <TopBar />
       </div>
 
-      {/* نوار بالایی با z-index بالا */}
       <div
         className="relative z-[10000] flex items-center justify-between px-4 py-3 backdrop-blur-[15px] bg-white/30 rounded-t-xl mx-[0.5]"
         style={{
@@ -302,7 +265,6 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
           boxShadow: "0px 1px 6px 0px #00000026",
         }}
       >
-        {/* اطلاعات کاربر (سمت راست) */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 ring-2 ring-white/50">
             <Image
@@ -320,7 +282,6 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
           <div className="text-sm font-medium text-gray-800">{statusText}</div>
         </div>
 
-        {/* دکمه بازگشت و گزارش (سمت چپ) */}
         <div className="flex items-center gap-2">
           <ReportDropdown
             targetId={conversationId || adId}
@@ -348,14 +309,16 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
         </div>
       </div>
 
-      {/* بخش نمایش پیام‌ها */}
-      <div className="flex-1 overflow-y-auto relative mx-[0.5]">
-        <img
-          src="/images/bg_support_ticket.svg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-          loading="lazy"
-        />
+      {/* بخش پیام‌ها با پس‌زمینه ثابت */}
+      <div
+        className="flex-1 overflow-y-auto relative mx-[0.5]"
+        style={{
+          backgroundImage: "url('/images/bg_support_ticket.svg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+        }}
+      >
         <div className="relative z-10 mx-[0.5vh] my-2 space-y-3">
           {messages.map((msg, idx) => {
             const isCurrentUser = msg.senderId === currentUserId;
@@ -413,12 +376,10 @@ const ChatMessagesContent: React.FC<ChatMessagesContentProps> = ({
         </div>
       </div>
 
-      {/* نشانگر تایپ */}
       {isTyping && (
         <div className="text-xs text-gray-500 px-4 pb-1">در حال تایپ است…</div>
       )}
 
-      {/* نوار ورودی پیام */}
       <div className="flex gap-2 p-3 border-t bg-white">
         <input
           value={inputMessage}

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import TopBar from "@/components/common/TopBar";
 import MessagesContent from "./Desk/MessagesContent";
+
 const Messages: React.FC = () => {
   return (
     <div className="flex flex-col h-[88vh] overflow-y-hidden">
