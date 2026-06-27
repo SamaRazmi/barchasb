@@ -140,8 +140,9 @@ export default function CardContentMobile({
   };
 
   return (
-    <div
-      className={`relative w-full h-[164px] sm:h-[220px] md:hidden ${className}`}
+    <Link
+      href={finalDetailsLink}
+      className="block relative w-full h-[164px] sm:h-[220px] md:hidden"
     >
       <div
         className="absolute inset-0 border border-[#00B6FF] rounded-[20px]"
@@ -161,20 +162,17 @@ export default function CardContentMobile({
         />
       </div>
 
-      <Link href={finalDetailsLink} className="absolute bottom-0 left-0 z-20">
-        <div
-          className="w-[85px] h-[22px] flex items-center justify-center text-white text-[16px] font-[400]"
-          style={{
-            backgroundColor: "#00B6FF",
-            borderTopRightRadius: "20px",
-            borderBottomLeftRadius: "20px",
-          }}
-        >
-          جزئیات
-        </div>
-      </Link>
+      <div
+        className="absolute bottom-0 left-0 z-20 w-[85px] h-[22px] flex items-center justify-center text-white text-[16px] font-[400]"
+        style={{
+          backgroundColor: "#00B6FF",
+          borderTopRightRadius: "20px",
+          borderBottomLeftRadius: "20px",
+        }}
+      >
+        جزئیات
+      </div>
 
-      {/* کلید راه‌حل: استفاده از key={currentImg} برای اجبار به لود مجدد تصویر */}
       <div className="absolute top-0 right-0 h-full w-[131px] overflow-hidden border-l border-gray-300 rounded-r-[20px]">
         <img
           key={currentImg}
@@ -193,46 +191,55 @@ export default function CardContentMobile({
               {title}
             </p>
           )}
+
           {personName && (
             <p className="text-xs text-gray-700 truncate leading-[1.5]">
               {personName}
             </p>
           )}
+
           {experience && (
             <p className="text-xs text-gray-500 truncate leading-[1.5]">
               {experience}
             </p>
           )}
+
           {details && (
             <p className="text-xs text-gray-500 truncate leading-[1.5]">
               {details}
             </p>
           )}
+
           {contactName && (
             <p className="text-xs text-gray-700 truncate leading-[1.5]">
               {contactName}
             </p>
           )}
+
           {positions && (
             <p className="text-xs text-gray-500 truncate leading-[1.5]">
               {positions}
             </p>
           )}
+
           {skills && createStyledLine(skills, skillsRef)}
+
           {jobTitle && (
             <p className="text-xs text-gray-700 truncate leading-[1.5]">
               {jobTitle}
             </p>
           )}
+
           {jobType && (
             <p className="text-xs text-gray-500 truncate leading-[1.5]">
               {jobType}
             </p>
           )}
+
           {salary && createStyledLine(salary, salaryRef)}
           {location && createStyledLine(location, locationRef)}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

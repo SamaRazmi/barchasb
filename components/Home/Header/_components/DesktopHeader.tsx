@@ -10,6 +10,7 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "@/store/store";
 import { userLogedTrue } from "@/store/slices/logedSlice";
 import { setRole } from "@/store/slices/roleSlice";
+import Link from "next/link";
 
 const DesktopMenu = () => {
   const [anchorJob, setAnchorJob] = useState<HTMLElement | null>(null);
@@ -103,20 +104,49 @@ const DesktopMenu = () => {
     },
   ];
 
+  // داده‌های بنر
+  const bannerItems = [
+    {
+      text: "بیا برچسب کلاب ، بازی کن ، امتیاز بگیر ، پولش کن",
+      href: "/club",
+      icon: "/images/banerClub.svg",
+    },
+    {
+      text: "آموزش گام‌به‌گام؛ با برچسب حرفه‌ای شو",
+      href: "/education",
+      icon: "/images/banerrSchool.svg",
+    },
+    {
+      text: "تنوع بی‌پایان؛ در برچسب‌شاپ همه چی هست",
+      href: "/shop",
+      icon: "/images/banerShop.svg",
+    },
+    {
+      text: "ثبت سریع آگهی و هزاران فرصت شغلی در انتظار توست",
+      href: "/dashboard",
+      icon: "/images/banerAd.svg",
+    },
+  ];
+  // داخل کامپوننت DesktopMenu
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % bannerItems.length);
+    }, 4000); // هر 4 ثانیه تغییر کند
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <nav
       className="hidden md:flex fixed top-0 right-0 z-[9999] font-[Goozar] items-center justify-between w-full h-[10vh] sm:px-[2vh] md:px-[3vh] bg-white py-[1vh]"
       style={{ boxShadow: "0px 4px 4px 0px #0000000D" }}
     >
+      {/* لوگو */}
       <div className="flex items-center rtl">
         <div
           className="relative flex-shrink-0 flex items-center"
-          style={{
-            width: "9vh",
-            height: "8vh",
-            marginLeft: isSM ? 14 : 18,
-            marginRight: isSM ? 2 : 3,
-          }}
+          style={{ width: "10vh", height: "9vh", marginLeft: 18 }}
         >
           <Image
             src="/images/Logo.png"
@@ -126,77 +156,35 @@ const DesktopMenu = () => {
           />
         </div>
 
-        {/* {leftMenus.map(({ label, anchor, setAnchor, ref }, idx) => (
-          <div
-            key={idx}
-            className="flex items-center relative"
-            onMouseLeave={() => setAnchor(null)}
-            style={{
-              marginLeft: isSM ? (idx === 0 ? 10 : 0) : idx === 0 ? 15 : 0,
-            }}
+        {/* بنر قابل کلیک (صندوقچه) */}
+        <Link
+          href={bannerItems[activeIndex].href}
+          className="flex items-center justify-center gap-2 px-3 md:px-4 py-2
+             rounded-[10px] transition-all duration-500 ease-in-out
+             cursor-pointer h-[6vh]
+             w-full max-w-[420px]
+             bg-gradient-to-r from-[#143A62] to-[#00B6FF]"
+        >
+          <span
+            className="text-white text-xs sm:text-sm md:text-[2vh]
+                   font-medium whitespace-nowrap
+                   overflow-hidden text-ellipsis"
           >
-            <Button
-              variant="text"
-              style={{
-                ...menuButtonStyle,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: isSM ? 80 : isMD ? 120 : 180,
-                height: isSM ? 24 : isMD ? 34 : 44,
-                padding: 0,
-                backgroundColor: "#f3f4f6",
-                transition: "background-color 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#d1d5db";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#f3f4f6";
-              }}
-            >
-              <span
-                ref={ref}
-                onMouseEnter={() => setAnchor(ref.current)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "baseline",
-                  gap: isSM ? "1px" : isMD ? "1px" : "2px",
-                }}
-              >
-                <span>{label}</span>
-                <span
-                  className="relative"
-                  style={{
-                    width: isSM ? 10 : isMD ? 12 : 18,
-                    height: isSM ? 4 : isMD ? 5 : 8,
-                    display: "inline-block",
-                  }}
-                >
-                  <Image
-                    src="/images/vector_menu.png"
-                    alt="فلش"
-                    fill
-                    style={{ objectFit: "contain" }}
-                  />
-                </span>
-              </span>
-            </Button>
+            {bannerItems[activeIndex].text}
+          </span>
 
-            {label === "استخدام و کار" && (
-              <JobMenuDesk isOpen={Boolean(anchor)} anchorEl={anchor} />
-            )}
-            {label === "پیدا کردن کار" && (
-              <FindMenuDesk isOpen={Boolean(anchor)} anchorEl={anchor} />
-            )}
-          </div>
-        ))} */}
+          <Image
+            src={bannerItems[activeIndex].icon}
+            alt="icon"
+            width={28}
+            height={28}
+            className="transition-opacity duration-500 shrink-0"
+          />
+        </Link>
       </div>
 
-      <div
-        className="flex items-center"
-        style={{ gap: isSM ? 10 : isMD ? 14 : 18 }}
-      >
+      {/* دکمه‌های سمت راست */}
+      <div className="flex items-center" style={{ gap: isSM ? 10 : 18 }}>
         {rightButtons.map(({ label, variant, style: customStyle }, idx) => (
           <div
             key={idx}
@@ -235,7 +223,9 @@ const DesktopMenu = () => {
                 if (!checkedLogin) return;
                 if (label === "خانه")
                   router.push("/"); // ← مسیر خانه
-                else if (label === "درباره ما") router.push("/about-us"); // ← مسیر درباره ما
+                else if (label === "درباره ما")
+                  router.push("/about-us"); // ← مسیر درباره ما
+                else if (label === "برچسب کلاب") router.push("club");
                 if (label === "شروع کار" && isLoggedIn)
                   router.push("/dashboard");
               }}
